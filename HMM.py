@@ -108,7 +108,7 @@ def ViterbiAlg(obList, graph):
             evalStep = lambda x : vit[x][t-1] * graph.a(x, s) * s.b(obList[t]) 
             vit[s][t] = max(map(evalStep, vit))
             for j in range(graph.size()):
-                if evalStep j = vit[s][t]:
+                if evalStep j == vit[s][t]:
                     backpoint[s][t] = j
                     break
     vit[i][t] = 
