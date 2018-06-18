@@ -46,7 +46,7 @@ class Graph(object):
         return graph.root
 
     """ Gets end node of the graph """
-    def setRoot():
+    def getEnd():
         return graph.end
     
     """ Sets new root of the graph 
@@ -58,7 +58,7 @@ class Graph(object):
     """ Sets new end node of the graph 
     Pre-conditions:
     newEnd: is an orphan node that exists already in the graph """
-    def setRoot(newEnd):
+    def setEnd(newEnd):
         graph.end = newEnd
 
     """ Returns the size of the graph """
@@ -102,8 +102,9 @@ class Graph(object):
     def a(parent, child):
         children = self.graphDict[parent]
         for x, y in children:
-            if x == parent:
+            if x == child:
                 return y
+        return 0 # if x not in children
     
 
 """Executes Forward Algorithm on graph object graph
@@ -182,28 +183,9 @@ returns probability of observing the observation sequence [obList] in [graph]"""
 def BwdAlg(obList, graph):
     # Initialize matrices
     # A/weight matrix from [t..T]
-    fwd = [[None] * (graph.size() + 2)] * len(obList)
+    AMatrix = [[None] * (graph.size() + 2)] * len(obList)
+    finalRow = []
+    qf = graph.getEnd()
     for node in graph.list():
-        graph.a()
-
-    
-    
-
-"""Executes Forward Algorithm on graph object graph
-Pre-conditions:
-obList: t = length of obList in a_t (length of obList determines # iterations)
-        in set of all possible observations from every node of [graph]
-graph: graph of N states representing a L-R HMM (each path has a weight
-       representing a probability & all paths travel in one direction.
-returns the probability of observing the observation sequence [obList] in [graph]"""
-def FwdAlg(obList, graph):
-    fwd = [[None] * (graph.size() + 2)] * len(obList)
-    for i in range(graph.size()):
-        s = graph.list()[i]
-        fwd[i][1] = graph.a(0, s) * s.b(obList[i])
-    for t in range(len(obList)-2):
-        for i in range(graph.size()):
-            s = graph.list()[i]
-            evalStep = lambda x : fwd[x][t-1] * graph.a(x, s) * s.b(obList[t]) 
-            fwd[s][t] = sum(map(evalStep, fwd))
-    return sum(map(lambda s:fwd[s][len(obList)]*graph.a(s,graph.list()[-1]), fwd))
+        finalRow.append(graph.a(node, qf))
+    AMatrix[-1] = finalRow
