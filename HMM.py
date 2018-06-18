@@ -27,6 +27,7 @@ class Node(object):
 
 class Graph(object):
     """ Initializes a Graph object
+    Example: ('HOT1', ('HOT1',))
     Pre-conditions:
     nodes: list of nodes, the first node being the starting node (must be root),
            last one being the final node
@@ -38,6 +39,7 @@ class Graph(object):
         self.graphDict = {}
         self.V = {}
         self.A = [[0] * len(data)] * len(data)
+        self.Q = 
         nodes = [x[0] for x in data]
         for i in range(len(data)):
             node, children, obs = data[i]
