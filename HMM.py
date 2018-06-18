@@ -74,30 +74,6 @@ class Graph(object):
         return self.Q
     
     # --- Real methods ---
-    # """ Adds nodes to the graph and connections to its children. 
-    # Pre-conditions:
-    # nodes: list of nodes that contains no node already in the graph
-    # children: 2D matrix of nodes * floats, indexed by parent node. Must 
-    #           have same length as [nodes] """
-    # def addNodes(nodes, children):
-    #     self.graphList = self.graphList + nodes
-    #     for i in range(len(nodes)):
-    #         self.graphDict[nodes[i]] = children[i]
-    
-    # """ Removes nodes from the graph and connections to its children.
-    # Pre-conditions:
-    # nodes: list of node objects which are nodes that exist in the graph
-    # children: 2D matrix of nodes * floats, indexed by parent node. Must 
-    #           have same length as [nodes]
-    # returns void """
-    # def delNodes(nodes):
-    #     for n in nodes:
-    #         del self.graphDict[n]
-    #         try: 
-    #             self.graphList.remove(n)
-    #         except: 
-    #             pass
-        
     """ Returns the weight between nodes [parent] and [child]. 
     Pre-conditions: 
     parent: is a node in the graph. 
