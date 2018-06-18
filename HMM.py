@@ -3,12 +3,20 @@ class Node(object):
     Pre-conditions: 
     title: string
     observations: observational (string * float) list """
-    def __init__(title, observations):
+    def __init__(self, title, observations):
         self.title = title
         oDict = {}
         for o, p in observations:
             oDict[o] = p
         self.oDict = oDict
+    
+    """ Defines equality operator of nodes. Nodes are equal if they have the 
+    same title. TODO: Decide whether children should be considered as well. 
+    Pre-conditions:
+    [other]: an object of type Node. 
+    """
+    def __eq__(self, other):
+        return self.title == other.title
     
     """ Returns the likelihood of the given [observation]
     Pre-conditions:
@@ -20,21 +28,57 @@ class Node(object):
 class Graph(object):
     """ Initializes a Graph object
     Pre-conditions:
-    nodes: list of strings
-    children: 2D matrix of strings * floats, indexed by parent node. Must 
+    nodes: list of nodes, the first node being the starting node (must be root),
+           last one being the final node
+    children: 2D matrix of nodes * floats, indexed by parent node. Must 
               have same length as [nodes]"""
-    def __init__(nodes, children):
+    def __init__(self, nodes, children):
         self.graphDict = {}
+        self.graphList = nodes
+        self.root = nodes[0]
+        self.end = nodes[-1]
         for i in range(len(nodes)):
             self.graphDict[nodes[i]] = children[i]
+
+    # --- Setters & Getters ---
+    """ Gets root of the graph """
+    def getRoot():
+        return graph.root
+
+    """ Gets end node of the graph """
+    def setRoot():
+        return graph.end
     
-    """ Adds nodes to the graph and connections to its children. If [nodes] 
-    contains a string that is already in the graph, it will be overwritten.
+    """ Sets new root of the graph 
+    
     Pre-conditions:
-    nodes: list of nodes
+    newRoot: is an orphan node that exists already in the graph """
+    def setRoot(newRoot):
+        graph.root = newRoot
+
+    """ Sets new end node of the graph 
+    
+    Pre-conditions:
+    newEnd: is an orphan node that exists already in the graph """
+    def setRoot(newEnd):
+        graph.end = newEnd
+
+    """ Returns the size of the graph """
+    def size():
+        return len(self.graphDict)
+
+    """ Returns the list of nodes of the graph"""
+    def list():
+        return self.graphList
+    
+    # --- Real methods ---
+    """ Adds nodes to the graph and connections to its children. 
+    Pre-conditions:
+    nodes: list of nodes that contains no node already in the graph
     children: 2D matrix of nodes * floats, indexed by parent node. Must 
               have same length as [nodes] """
     def addNodes(nodes, children):
+        self.graphList = self.graphList + nodes
         for i in range(len(nodes)):
             self.graphDict[nodes[i]] = children[i]
     
@@ -47,24 +91,20 @@ class Graph(object):
     def delNodes(nodes):
         for n in nodes:
             del self.graphDict[n]
-
-    """ Returns the size of the graph """
-    def size():
-        return len(self.graphDict)
-
-    """ Returns the list of nodes of the graph"""
-    def list():
-        return list(d.keys())
+            try: 
+                self.graphList.remove(n)
+            except: 
+                pass
         
-    """ Returns the weight between nodes [initial] and [final]. 
+    """ Returns the weight between nodes [parent] and [child]. 
     Pre-conditions: 
-    initial: is a node in the graph. 
-    final: is a node in the graph. There must be a direct connection from 
-           [initial] to [final]. """
-    def a(initial, final):
-        initialChildren = self.graphDict[initial]
-        for x, y in initialChildren:
-            if x == final:
+    parent: is a node in the graph. 
+    child: is a node in the graph. There must be a direct connection from 
+           [parent] to [child]. """
+    def a(parent, child):
+        children = self.graphDict[parent]
+        for x, y in children:
+            if x == parent:
                 return y
     
 
@@ -76,16 +116,16 @@ graph: graph of N states representing a L-R HMM (each path has a weight
        representing a probability & all paths travel in one direction.
 returns the probability of observing the observation sequence [obList] in [graph]"""
 def FwdAlg(obList, graph):
-    fwd = [[None] * len(obList)] * (graph.size() + 2)
+    fwd = [[None] * (graph.size() + 2)] * len(obList)
     for i in range(graph.size()):
         s = graph.list()[i]
-        fwd[i][1] = graph.a(0, s) * s.b(obList[i])
+        fwd[1][i] = graph.a(0, s) * s.b(obList[i])
     for t in range(len(obList)-2):
         for i in range(graph.size()):
             s = graph.list()[i]
-            evalStep = lambda x : fwd[x][t-1] * graph.a(x, s) * s.b(obList[t]) 
+            evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             fwd[s][t] = sum(map(evalStep, fwd))
-    return sum(map(lambda s:fwd[s][len(obList)]*graph.a(s,graph.list()[-1]), fwd))
+    return sum(map(lambda s:fwd[len(obList)][s]*graph.a(s,graph.list()[-1]), fwd))
 
 
 """ Executes Viterbi Algorithm on a HMM graph object
@@ -96,34 +136,79 @@ graph: graph of N states representing a L-R HMM (each path has a weight
        representing a probability & all paths travel in one direction.
 returns the path most likely to observe observation sequence [obList] in [graph]"""
 def ViterbiAlg(obList, graph):
-    vit = [[None] * len(obList)] * (graph.size() + 2)
-    backpoint = [[None] * len(obList)] * (graph.size() + 2)
+    # Initialize matrices
+    vit = [[None] * (graph.size() + 2)] * len(obList)
+    backpoint = [[None] * (graph.size() + 2)] * len(obList)
     for i in range(graph.size()):
         s = graph.list()[i]
-        vit[i][1] = graph.a(0, s) * s.b(obList[i])
-        backpoint[i][1] = 0
+        vit[1][i] = graph.a(0, s) * s.b(obList[i])
+        backpoint[1][i] = 0
+    # Iteration/Calculation
     for t in range(len(obList)-2):
         for i in range(graph.size()):
             s = graph.list()[i]
-            evalStep = lambda x : vit[x][t-1] * graph.a(x, s) * s.b(obList[t]) 
-            vit[s][t] = max(map(evalStep, vit))
+            evalStep = lambda x : vit[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
+            vit[t][s] = max(map(evalStep, vit))
             for j in range(graph.size()):
-                if evalStep j == vit[s][t]:
-                    backpoint[s][t] = j
+                if evalStep j == vit[t][s]:
+                    backpoint[t][s] = j
                     break
-    vit[i][t] = 
-        max(map(lambda s:vit[s][len(obList)]*graph.a(s,graph.list()[-1]), vit))
-    backpoint[i][t] = 
+    # Termination
+    vit[-1][i] = 
+        max(map(lambda s:vit[len(obList)][s]*graph.a(s,graph.list()[-1]), vit))
+    backpoint[-1][i] = 
         for j in range(graph.size()):
-            if evalStep j = vit[i][t]:
-                backpoint[i][t] = j
+            if evalStep j = vit[-1][i]:
+                backpoint[-1][i] = j
                 break
-    x = backpoint[i][t]
-    VitBackTrace = []
+    x = backpoint[-1][i]
+    # BackTrace calculation from backpoint matrix
+    vitBackTrace = []
+    t = -1
     while x != 0:
-        VitBackTrace.prepend(x)
+        vitBackTrace.prepend(x)
         x = backpoint[x][t-1]
-    return VitBackTrace.prepend(0)
+        t = t - 1
+    return vitBackTrace.prepend(0)
 
 
 #TODO: Implement Fwd-Bwd Algo 
+""" Executes Backward Algorithm on graph object [graph] given observation seq
+[obList] and returns a ß value. ß representing the probability of seeing the 
+observation sequence from time t+1 to end time T given the current state @ time
+t and given the current graph. 
+
+Pre-conditions:
+[obList]: if length of obList is d, function returns ß[T-d-1:T]
+          sequence of vocab of set of all possible observations from [graph]
+[graph]: graph of N states representing an L-R HMM
+
+returns probability of observing the observation sequence [obList] in [graph]"""
+def BwdAlg(obList, graph):
+    # Initialize matrices
+    # A/weight matrix from [t..T]
+    fwd = [[None] * (graph.size() + 2)] * len(obList)
+    for _, children in graph.graphDict:
+
+    
+    
+
+"""Executes Forward Algorithm on graph object graph
+
+Pre-conditions:
+obList: t = length of obList in a_t (length of obList determines # iterations)
+        in set of all possible observations from every node of [graph]
+graph: graph of N states representing a L-R HMM (each path has a weight
+       representing a probability & all paths travel in one direction.
+returns the probability of observing the observation sequence [obList] in [graph]"""
+def FwdAlg(obList, graph):
+    fwd = [[None] * (graph.size() + 2)] * len(obList)
+    for i in range(graph.size()):
+        s = graph.list()[i]
+        fwd[i][1] = graph.a(0, s) * s.b(obList[i])
+    for t in range(len(obList)-2):
+        for i in range(graph.size()):
+            s = graph.list()[i]
+            evalStep = lambda x : fwd[x][t-1] * graph.a(x, s) * s.b(obList[t]) 
+            fwd[s][t] = sum(map(evalStep, fwd))
+    return sum(map(lambda s:fwd[s][len(obList)]*graph.a(s,graph.list()[-1]), fwd))
