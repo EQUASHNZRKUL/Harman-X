@@ -4,3 +4,4 @@ q1children = [('HOT1', .5), ('COLD2', .2), ('WARM3', .3)]
 q2children = [('HOT1', .2), ('COLD2', .5), ('WARM3', .3)]
 q3children = [('HOT1', .3), ('COLD2', .1), ('WARM3', .6)]
 data = [('HOT1', q1children, []), ('COLD2', q2children, []), ('WARM3', q3children, [])]
+g = HMM.Graph(data)

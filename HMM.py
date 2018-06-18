@@ -36,11 +36,14 @@ class Graph(object):
     observations: indexed sequence of observation * prob lists corresponding to 
                   node index"""
     def __init__(self, data):
+        # field declarations
         self.graphDict = {}
-        self.V = {}
+        self.Q = []
         self.A = [[0] * len(data)] * len(data)
-        self.Q = 
+        self.V = set()
+        self.B = []
         nodes = [x[0] for x in data]
+        # field instantiation
         for i in range(len(data)):
             node, children, obs = data[i]
             self.Q.append(node)
@@ -50,7 +53,7 @@ class Graph(object):
                     self.A[i][j] = prob
                 except ValueError:
                     print("%s (child) isn't found in the node list" %child)
-            self.V = self.V | obs
+            self.V = self.V | set(obs)
             self.B.append(obs)
         self.start = data[0][0]
         self.final = data[-1][0]
@@ -72,31 +75,31 @@ class Graph(object):
 
     # --- Setters & Getters ---
     """ Gets root of the graph """
-    def getRoot():
-        return graph.root
+    def getRoot(self):
+        return self.root
 
     """ Gets end node of the graph """
-    def getEnd():
-        return graph.end
+    def getEnd(self):
+        return self.end
     
     """ Sets new root of the graph 
     Pre-conditions:
     newRoot: is an orphan node that exists already in the graph """
-    def setRoot(newRoot):
-        graph.root = newRoot
+    def setRoot(self, newRoot):
+        self.root = newRoot
 
     """ Sets new end node of the graph 
     Pre-conditions:
     newEnd: is an orphan node that exists already in the graph """
-    def setEnd(newEnd):
-        graph.end = newEnd
+    def setEnd(self, newEnd):
+        self.end = newEnd
 
     """ Returns the size of the graph """
-    def size():
+    def size(self):
         return len(self.graphDict)
 
     """ Returns the list of nodes of the graph"""
-    def list():
+    def list(self):
         return self.graphList
     
     # --- Real methods ---
