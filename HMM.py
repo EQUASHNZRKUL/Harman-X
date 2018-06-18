@@ -114,16 +114,19 @@ graph: graph of N states representing a L-R HMM (each path has a weight
        representing a probability & all paths travel in one direction.
 returns the probability of observing the observation sequence [obList] in [graph]"""
 def FwdAlg(obList, graph):
+    # Initialize
     fwd = [[None] * (graph.size() + 2)] * len(obList)
     for i in range(graph.size()):
         s = graph.list()[i]
         fwd[1][i] = graph.a(0, s) * s.b(obList[i])
+    # Iteration
     for t in range(len(obList)-2):
         for i in range(graph.size()):
             s = graph.list()[i]
             evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
-            fwd[s][t] = sum(map(evalStep, fwd))
-    return sum(map(lambda s:fwd[len(obList)][s]*graph.a(s,graph.list()[-1]), fwd))
+            fwd[t][s] = sum(map(evalStep, fwd[t-1]))
+    # Termination TODO: fix for iteration (copy bwd)
+    return sum(map(lambda s:fwd[len(obList)][s]*graph.a(s,graph.getEnd()), fwd[-1]))
 
 
 """ Executes Viterbi Algorithm on a HMM graph object
@@ -169,7 +172,6 @@ def ViterbiAlg(obList, graph):
     return vitBackTrace.prepend(0)
 
 
-#TODO: Implement Fwd-Bwd Algo 
 """ Executes Backward Algorithm on graph object [graph] given observation seq
 [obList] and returns a ß value. ß representing the probability of seeing the 
 observation sequence from time t+1 to end time T given the current state @ time
@@ -183,9 +185,22 @@ returns probability of observing the observation sequence [obList] in [graph]"""
 def BwdAlg(obList, graph):
     # Initialize matrices
     # A/weight matrix from [t..T]
-    AMatrix = [[None] * (graph.size() + 2)] * len(obList)
+    BMatrix = [[None] * (graph.size() + 2)] * len(obList)
     finalRow = []
     qf = graph.getEnd()
     for node in graph.list():
         finalRow.append(graph.a(node, qf))
-    AMatrix[-1] = finalRow
+    BMatrix[-1] = finalRow
+    # Iteration
+    for dt in range(len(obList))-1:
+        t = len(obList) - dt - 1
+        for i in range(graph.size()):
+            s = graph.list()[i]
+            evalStep = lambda j : graph.a(j,s) * s.b(obList[t+1]) * BMatrix[t+1][j]
+            fwd[t][s] = sum(map(evalStep, fwd[t+1]))
+    # Termination
+    termStep = lambda j : graph.a(0, j) * graph.list()[j].b(obList[0]) * BMatrix[0][j]
+    return sum(map(termStep, range(len(graph.list()))))
+
+
+#TODO: Implement Fwd-Bwd Algo 
