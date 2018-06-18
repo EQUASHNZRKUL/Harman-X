@@ -34,19 +34,39 @@ class Graph(object):
               have same length as [nodes]
     observations: indexed sequence of observation * prob lists corresponding to 
                   node index"""
-    def __init__(self, nodes, children, observations):
+    def __init__(self, data):
         self.graphDict = {}
-        self.graphList = nodes
-        #HMM Formal Defn
-        self.states = nodes
-        self.observations = observations
-        self.root = nodes[0]
-        self.end = nodes[-1]
-        self.AMatrix = None
-        self.BMatrix = None
-        #TODO: INITIALIZE A AND B
-        for i in range(len(nodes)):
-            self.graphDict[nodes[i]] = children[i]
+        self.V = {}
+        self.A = [[0] * len(data)] * len(data)
+        nodes = [x[0] for x in data]
+        for i in range(len(data)):
+            node, children, obs = data[i]
+            self.Q.append(node)
+            for child, prob in children:
+                try: 
+                    j = nodes.index(child)
+                    self.A[i][j] = prob
+                except ValueError:
+                    print("%s (child) isn't found in the node list" %child)
+            self.V = self.V | obs
+            self.B.append(obs)
+        self.start = data[0][0]
+        self.final = data[-1][0]
+
+
+    # def __init__(self, nodes, children, observations):
+    #     self.graphDict = {}
+    #     self.graphList = nodes
+    #     #HMM Formal Defn
+    #     self.states = nodes
+    #     self.observations = observations
+    #     self.root = nodes[0]
+    #     self.end = nodes[-1]
+    #     self.AMatrix = None
+    #     self.BMatrix = None
+    #     #TODO: INITIALIZE A AND B
+    #     for i in range(len(nodes)):
+    #         self.graphDict[nodes[i]] = children[i]
 
     # --- Setters & Getters ---
     """ Gets root of the graph """
@@ -135,7 +155,7 @@ def FwdAlg(obList, graph):
             evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             fwd[t][s] = sum(map(evalStep, fwd[t-1]))
     # Termination TODO: fix for iteration (copy bwd)
-     termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getEnd()]
+    termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getEnd()]
     return sum(map(termStep, range(len(graph.list()))))
 
 
@@ -160,14 +180,14 @@ def ViterbiAlg(obList, graph):
             evalStep = lambda x : vit[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             vit[t][s] = max(map(evalStep, vit))
             for j in range(graph.size()):
-                if evalStep j == vit[t][s]:
+                if evalStep(j) == vit[t][s]:
                     backpoint[t][s] = j
                     break
     # Termination
     termStep = lambda s:vit[len(obList)-1][s]*graph.a(graph.list()[s],graph.getEnd())
     vit[-1][-1] = max(map(termStep, range(len(graph.list()))))
     for j in range(graph.size()):
-        if evalStep j = vit[-1][-1]:
+        if termStep(j) == vit[-1][-1]:
             backpoint[-1][-1] = j
             break
     x = backpoint[-1][-1]
@@ -182,11 +202,11 @@ def ViterbiAlg(obList, graph):
 
 
 """ Executes Backward Algorithm on graph object [graph] given observation seq
-[obList] and returns a ß value. ß representing the probability of seeing the 
+[obList] and returns a Beta value. Beta representing the probability of seeing the 
 observation sequence from time t+1 to end time T given the current state @ time
 t and given the current graph. 
 Pre-conditions:
-[obList]: if length of obList is d, function returns ß[T-d-1:T]
+[obList]: if length of obList is d, function returns B[T-d-1:T]
           sequence of vocab of set of all possible observations from [graph]
 [graph]: graph of N states representing an L-R HMM
 
@@ -212,11 +232,11 @@ def BwdAlg(obList, graph):
     return sum(map(termStep, range(len(graph.list()))))
 
 
-""" Executes the xi function
-"""
-def xi(t, i, j, graph):
+# """ Executes the xi function
+# """
+# def xi(t, i, j, graph):
     
 
 
-#TODO: Implement Fwd-Bwd Algo 
-def forward_backward(obList, state set = )
+# #TODO: Implement Fwd-Bwd Algo 
+# def forward_backward(obList, state set = )
