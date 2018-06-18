@@ -39,7 +39,7 @@ class Graph(object):
         # field declarations
         self.graphDict = {}
         self.Q = []
-        self.A = [[0] * len(data)] * len(data)
+        self.A = [[0 for x in range(len(data))] for x in range(len(data))]
         self.V = set()
         self.B = []
         nodes = [x[0] for x in data]
@@ -65,8 +65,8 @@ class Graph(object):
     #     #HMM Formal Defn
     #     self.states = nodes
     #     self.observations = observations
-    #     self.root = nodes[0]
-    #     self.end = nodes[-1]
+    #     self.start = nodes[0]
+    #     self.final = nodes[-1]
     #     self.AMatrix = None
     #     self.BMatrix = None
     #     #TODO: INITIALIZE A AND B
@@ -75,24 +75,24 @@ class Graph(object):
 
     # --- Setters & Getters ---
     """ Gets root of the graph """
-    def getRoot(self):
-        return self.root
+    def getStart(self):
+        return self.start
 
     """ Gets end node of the graph """
-    def getEnd(self):
-        return self.end
+    def getFinal(self):
+        return self.final
     
     """ Sets new root of the graph 
     Pre-conditions:
-    newRoot: is an orphan node that exists already in the graph """
-    def setRoot(self, newRoot):
-        self.root = newRoot
+    newStart: is an orphan node that exists already in the graph """
+    def setStart(self, newStart):
+        self.start = newStart
 
     """ Sets new end node of the graph 
     Pre-conditions:
-    newEnd: is an orphan node that exists already in the graph """
-    def setEnd(self, newEnd):
-        self.end = newEnd
+    newFinal: is an orphan node that exists already in the graph """
+    def setFinal(self, newFinal):
+        self.final = newFinal
 
     """ Returns the size of the graph """
     def size(self):
@@ -160,7 +160,7 @@ def FwdAlg(obList, graph):
             evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             fwd[t][s] = sum(map(evalStep, fwd[t-1]))
     # Termination TODO: fix for iteration (copy bwd)
-    termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getEnd()]
+    termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getFinal()]
     return sum(map(termStep, range(len(graph.list()))))
 
 
@@ -189,7 +189,7 @@ def ViterbiAlg(obList, graph):
                     backpoint[t][s] = j
                     break
     # Termination
-    termStep = lambda s:vit[len(obList)-1][s]*graph.a(graph.list()[s],graph.getEnd())
+    termStep = lambda s:vit[len(obList)-1][s]*graph.a(graph.list()[s],graph.getFinal())
     vit[-1][-1] = max(map(termStep, range(len(graph.list()))))
     for j in range(graph.size()):
         if termStep(j) == vit[-1][-1]:
@@ -221,7 +221,7 @@ def BwdAlg(obList, graph):
     # A/weight matrix from [t..T]
     BMatrix = [[None] * (graph.size() + 2)] * len(obList)
     finalRow = []
-    qf = graph.getEnd()
+    qf = graph.getFinal()
     for node in graph.list():
         finalRow.append(graph.a(node, qf))
     BMatrix[-1] = finalRow
