@@ -11,7 +11,7 @@ class Node(object):
         self.oDict = oDict
     
     """ Defines equality operator of nodes. Nodes are equal if they have the 
-    same title. TODO: Decide whether children should be considered as well. 
+    same title.  
     Pre-conditions:
     [other]: an object of type Node. 
     """
@@ -50,14 +50,12 @@ class Graph(object):
         return graph.end
     
     """ Sets new root of the graph 
-    
     Pre-conditions:
     newRoot: is an orphan node that exists already in the graph """
     def setRoot(newRoot):
         graph.root = newRoot
 
     """ Sets new end node of the graph 
-    
     Pre-conditions:
     newEnd: is an orphan node that exists already in the graph """
     def setRoot(newEnd):
@@ -109,7 +107,6 @@ class Graph(object):
     
 
 """Executes Forward Algorithm on graph object graph
-
 Pre-conditions:
 obList: set of all possible observations from every node of [graph]
 graph: graph of N states representing a L-R HMM (each path has a weight
@@ -129,7 +126,6 @@ def FwdAlg(obList, graph):
 
 
 """ Executes Viterbi Algorithm on a HMM graph object
-
 Pre-conditions:
 obList: set of all possible observations from every node of [graph]
 graph: graph of N states representing a L-R HMM (each path has a weight
@@ -177,7 +173,6 @@ def ViterbiAlg(obList, graph):
 [obList] and returns a ß value. ß representing the probability of seeing the 
 observation sequence from time t+1 to end time T given the current state @ time
 t and given the current graph. 
-
 Pre-conditions:
 [obList]: if length of obList is d, function returns ß[T-d-1:T]
           sequence of vocab of set of all possible observations from [graph]
@@ -188,13 +183,13 @@ def BwdAlg(obList, graph):
     # Initialize matrices
     # A/weight matrix from [t..T]
     fwd = [[None] * (graph.size() + 2)] * len(obList)
-    for _, children in graph.graphDict:
+    for node in graph.list():
+        graph.a()
 
     
     
 
 """Executes Forward Algorithm on graph object graph
-
 Pre-conditions:
 obList: t = length of obList in a_t (length of obList determines # iterations)
         in set of all possible observations from every node of [graph]
