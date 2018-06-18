@@ -120,13 +120,16 @@ def FwdAlg(obList, graph):
         s = graph.list()[i]
         fwd[1][i] = graph.a(0, s) * s.b(obList[i])
     # Iteration
-    for t in range(len(obList)-2):
+    for dt in range(len(obList)-2):
+        t = dt + 1
         for i in range(graph.size()):
             s = graph.list()[i]
             evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             fwd[t][s] = sum(map(evalStep, fwd[t-1]))
     # Termination TODO: fix for iteration (copy bwd)
-    return sum(map(lambda s:fwd[len(obList)][s]*graph.a(s,graph.getEnd()), fwd[-1]))
+    termStep = lambda s:fwd[len(obList)][s]*graph.a(s,graph.getEnd())
+    termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getEnd()]
+    return sum(map(termStep, range(len(graph.list()))))
 
 
 """ Executes Viterbi Algorithm on a HMM graph object
@@ -155,7 +158,7 @@ def ViterbiAlg(obList, graph):
                     break
     # Termination
     vit[-1][i] = 
-        max(map(lambda s:vit[len(obList)][s]*graph.a(s,graph.list()[-1]), vit))
+        max(map(lambda s:vit[len(obList)-1][s]*graph.a(s,graph.list()[-1]), vit))
     backpoint[-1][i] = 
         for j in range(graph.size()):
             if evalStep j = vit[-1][i]:
