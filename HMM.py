@@ -108,20 +108,20 @@ class Graph(object):
             i = self.Q.index(parent)
             j = self.Q.index(child)
         except ValueError:
-            print("%s or %s were not found in graph's Q set" %parent, %child)
-            throw ValueError
+            print("%s or %s were not found in graph's Q set" %(parent, child))
+            raise ValueError()
         return self.A[i][j]
 
     """ Returns the likelihood of the given [observation]
     Pre-conditions:
     state: is a node in the graph
     observation: is an observation recorded by the node. """
-    def b(state, observation):
+    def b(self, state, observation):
         try:
             i = self.Q.index(state)
         except ValueError:
             print("%s was not found in the graph" %state)
-            throw ValueError
+            raise ValueError()
         obList = self.B[i]
         for k, v in obList:
             if observation == k:
@@ -141,13 +141,13 @@ def FwdAlg(obList, graph):
     fwd = [[None] * (graph.size() + 2)] * len(obList)
     for i in range(graph.size()):
         s = graph.list()[i]
-        fwd[1][i] = graph.a(0, s) * s.b(obList[i])
+        fwd[1][i] = graph.a(graph.getStart(), s) * graph.b(s,obList[i])
     # Iteration
     for dt in range(len(obList)-2):
         t = dt + 1
         for i in range(graph.size()):
             s = graph.list()[i]
-            evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
+            evalStep = lambda x : fwd[t-1][x] * graph.a(graph.list()[x], s) * graph.b(s, obList[t]) 
             fwd[t][s] = sum(map(evalStep, fwd[t-1]))
     # Termination TODO: fix for iteration (copy bwd)
     termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getFinal()]
