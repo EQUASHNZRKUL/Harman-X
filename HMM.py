@@ -53,7 +53,7 @@ class Graph(object):
                     self.A[i][j] = prob
                 except ValueError:
                     print("%s (child) isn't found in the node list" %child)
-            self.V = self.V | set(obs)
+            self.V = self.V | set([e[0] for e in obs])
             self.B.append(obs)
         self.start = data[0][0]
         self.final = data[-1][0]

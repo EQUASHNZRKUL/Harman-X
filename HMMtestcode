@@ -5,3 +5,13 @@ q2children = [('HOT1', .2), ('COLD2', .5), ('WARM3', .3)]
 q3children = [('HOT1', .3), ('COLD2', .1), ('WARM3', .6)]
 data = [('HOT1', q1children, []), ('COLD2', q2children, []), ('WARM3', q3children, [])]
 g = HMM.Graph(data)
+
+import HMM
+q0children = [('HOT1', .8), ('COLD2', .2)]
+q1children = [('HOT1', .6), ('COLD2', .3), ('END3', .1)]
+q2children = [('HOT1', .4), ('COLD2', .5), ('END3', .1)]
+q3children = []
+q1obs = [('1', .2), ('2', .4), ('3', .4)]
+q2obs = [('1', .5), ('2', .4), ('3', .1)]
+data = [('START0', q0children, []),('HOT1', q1children, q1obs), ('COLD2', q2children, q2obs), ('END3', q3children, [])]
+h = HMM.Graph(data)
