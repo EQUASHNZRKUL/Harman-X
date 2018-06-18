@@ -29,21 +29,6 @@ class Graph(object):
         self.start = data[0][0]
         self.final = data[-1][0]
 
-
-    # def __init__(self, nodes, children, observations):
-    #     self.graphDict = {}
-    #     self.graphList = nodes
-    #     #HMM Formal Defn
-    #     self.states = nodes
-    #     self.observations = observations
-    #     self.start = nodes[0]
-    #     self.final = nodes[-1]
-    #     self.AMatrix = None
-    #     self.BMatrix = None
-    #     #TODO: INITIALIZE A AND B
-    #     for i in range(len(nodes)):
-    #         self.graphDict[nodes[i]] = children[i]
-
     # --- Setters & Getters ---
     """ Gets root of the graph """
     def getStart(self):
@@ -104,7 +89,6 @@ class Graph(object):
                 return v
         return 0
 
-    
 
 """Executes Forward Algorithm on graph object graph
 Pre-conditions:
@@ -114,21 +98,23 @@ graph: graph of N states representing a L-R HMM (each path has a weight
 returns the probability of observing the observation sequence [obList] in [graph]"""
 def FwdAlg(obList, graph):
     # Initialize
-    fwd = [[None] * (graph.size() + 2)] * len(obList)
+    fwd = [[0.0 for z in range(graph.size())] for z in range(len(obList))]
     for i in range(graph.size()):
         s = graph.list()[i]
-        fwd[1][i] = graph.a(graph.getStart(), s) * graph.b(s,obList[i])
+        fwd[0][i] = graph.a(graph.getStart(), s) * graph.b(s,obList[0])
     # Iteration
-    for dt in range(len(obList)-2):
+    for dt in range(len(obList)-1):
         t = dt + 1
         for i in range(graph.size()):
+            print("i: %s" %i)
+            print("t: %s" %t)
             s = graph.list()[i]
-            evalStep = lambda x : fwd[t-1][x] * graph.a(graph.list()[x], s) * graph.b(s, obList[t]) 
-            fwd[t][s] = sum(map(evalStep, fwd[t-1]))
-    # Termination TODO: fix for iteration (copy bwd)
-    termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getFinal()]
+            evalStep = lambda x : fwd[t-1][x] * graph.a(graph.list()[x], s) * graph.b(s, obList[t])
+            fwd[t][i] = sum(map(evalStep, range(graph.size())))
+            print(fwd)
+    # Termination
+    termStep = lambda s : fwd[len(obList)-1][s] * graph.a(graph.list()[s], graph.getFinal())
     return sum(map(termStep, range(len(graph.list()))))
-
 
 """ Executes Viterbi Algorithm on a HMM graph object
 Pre-conditions:
@@ -138,8 +124,8 @@ graph: graph of N states representing a L-R HMM (each path has a weight
 returns the path most likely to observe observation sequence [obList] in [graph]"""
 def ViterbiAlg(obList, graph):
     # Initialize matrices
-    vit = [[None] * (graph.size() + 2)] * len(obList)
-    backpoint = [[None] * (graph.size() + 2)] * len(obList)
+    vit = [[None for x in graph.size()] for x in range(len(obList))]
+    backpoint = [[None for x in graph.size()] for x in range(len(obList))]
     for i in range(graph.size()):
         s = graph.list()[i]
         vit[1][i] = graph.a(0, s) * s.b(obList[i])
@@ -185,7 +171,7 @@ returns probability of observing the observation sequence [obList] in [graph]"""
 def BwdAlg(obList, graph):
     # Initialize matrices
     # A/weight matrix from [t..T]
-    BMatrix = [[None] * (graph.size() + 2)] * len(obList)
+    BMatrix = [[None for x in graph.size()] for x in range(len(obList))]
     finalRow = []
     qf = graph.getFinal()
     for node in graph.list():
