@@ -1,30 +1,3 @@
-class Node(object):
-    """ Inits a Node object 
-    Pre-conditions: 
-    title: string
-    observations: observational (string * float) list """
-    def __init__(self, title, observations):
-        self.title = title
-        oDict = {}
-        for o, p in observations:
-            oDict[o] = p
-        self.oDict = oDict
-    
-    """ Defines equality operator of nodes. Nodes are equal if they have the 
-    same title.  
-    Pre-conditions:
-    [other]: an object of type Node. 
-    """
-    def __eq__(self, other):
-        return self.title == other.title
-    
-    """ Returns the likelihood of the given [observation]
-    Pre-conditions:
-    observation: is an observation recorded by the node. """
-    def b(observation):
-        return self.oDict[observation]
-
-
 class Graph(object):
     """ Initializes a Graph object
     Example: ('HOT1', ('HOT1',))
@@ -38,18 +11,16 @@ class Graph(object):
     def __init__(self, data):
         # field declarations
         self.graphDict = {}
-        self.Q = []
+        self.Q = [x[0] for x in data]
         self.A = [[0 for x in range(len(data))] for x in range(len(data))]
         self.V = set()
         self.B = []
-        nodes = [x[0] for x in data]
         # field instantiation
         for i in range(len(data)):
-            node, children, obs = data[i]
-            self.Q.append(node)
+            _, children, obs = data[i]
             for child, prob in children:
                 try: 
-                    j = nodes.index(child)
+                    j = self.Q.index(child)
                     self.A[i][j] = prob
                 except ValueError:
                     print("%s (child) isn't found in the node list" %child)
@@ -96,48 +67,67 @@ class Graph(object):
 
     """ Returns the size of the graph """
     def size(self):
-        return len(self.graphDict)
+        return len(self.Q)
 
     """ Returns the list of nodes of the graph"""
     def list(self):
-        return self.graphList
+        return self.Q
     
     # --- Real methods ---
-    """ Adds nodes to the graph and connections to its children. 
-    Pre-conditions:
-    nodes: list of nodes that contains no node already in the graph
-    children: 2D matrix of nodes * floats, indexed by parent node. Must 
-              have same length as [nodes] """
-    def addNodes(nodes, children):
-        self.graphList = self.graphList + nodes
-        for i in range(len(nodes)):
-            self.graphDict[nodes[i]] = children[i]
+    # """ Adds nodes to the graph and connections to its children. 
+    # Pre-conditions:
+    # nodes: list of nodes that contains no node already in the graph
+    # children: 2D matrix of nodes * floats, indexed by parent node. Must 
+    #           have same length as [nodes] """
+    # def addNodes(nodes, children):
+    #     self.graphList = self.graphList + nodes
+    #     for i in range(len(nodes)):
+    #         self.graphDict[nodes[i]] = children[i]
     
-    """ Removes nodes from the graph and connections to its children.
-    Pre-conditions:
-    nodes: list of node objects which are nodes that exist in the graph
-    children: 2D matrix of nodes * floats, indexed by parent node. Must 
-              have same length as [nodes]
-    returns void """
-    def delNodes(nodes):
-        for n in nodes:
-            del self.graphDict[n]
-            try: 
-                self.graphList.remove(n)
-            except: 
-                pass
+    # """ Removes nodes from the graph and connections to its children.
+    # Pre-conditions:
+    # nodes: list of node objects which are nodes that exist in the graph
+    # children: 2D matrix of nodes * floats, indexed by parent node. Must 
+    #           have same length as [nodes]
+    # returns void """
+    # def delNodes(nodes):
+    #     for n in nodes:
+    #         del self.graphDict[n]
+    #         try: 
+    #             self.graphList.remove(n)
+    #         except: 
+    #             pass
         
     """ Returns the weight between nodes [parent] and [child]. 
     Pre-conditions: 
     parent: is a node in the graph. 
     child: is a node in the graph. There must be a direct connection from 
            [parent] to [child]. """
-    def a(parent, child):
-        children = self.graphDict[parent]
-        for x, y in children:
-            if x == child:
-                return y
-        return 0 # if x not in children
+    def a(self, parent, child):
+        try:
+            i = self.Q.index(parent)
+            j = self.Q.index(child)
+        except ValueError:
+            print("%s or %s were not found in graph's Q set" %parent, %child)
+            throw ValueError
+        return self.A[i][j]
+
+    """ Returns the likelihood of the given [observation]
+    Pre-conditions:
+    state: is a node in the graph
+    observation: is an observation recorded by the node. """
+    def b(state, observation):
+        try:
+            i = self.Q.index(state)
+        except ValueError:
+            print("%s was not found in the graph" %state)
+            throw ValueError
+        obList = self.B[i]
+        for k, v in obList:
+            if observation == k:
+                return v
+        return 0
+
     
 
 """Executes Forward Algorithm on graph object graph
