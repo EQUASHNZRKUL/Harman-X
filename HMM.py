@@ -157,14 +157,13 @@ def ViterbiAlg(obList, graph):
                     backpoint[t][s] = j
                     break
     # Termination
-    vit[-1][i] = 
-        max(map(lambda s:vit[len(obList)-1][s]*graph.a(s,graph.list()[-1]), vit))
-    backpoint[-1][i] = 
-        for j in range(graph.size()):
-            if evalStep j = vit[-1][i]:
-                backpoint[-1][i] = j
-                break
-    x = backpoint[-1][i]
+    termStep = lambda s:vit[len(obList)-1][s]*graph.a(graph.list()[s],graph.getEnd())
+    vit[-1][-1] = max(map(termStep, range(len(graph.list()))))
+    for j in range(graph.size()):
+        if evalStep j = vit[-1][-1]:
+            backpoint[-1][-1] = j
+            break
+    x = backpoint[-1][-1]
     # BackTrace calculation from backpoint matrix
     vitBackTrace = []
     t = -1
