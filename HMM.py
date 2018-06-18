@@ -31,12 +31,20 @@ class Graph(object):
     nodes: list of nodes, the first node being the starting node (must be root),
            last one being the final node
     children: 2D matrix of nodes * floats, indexed by parent node. Must 
-              have same length as [nodes]"""
-    def __init__(self, nodes, children):
+              have same length as [nodes]
+    observations: indexed sequence of observation * prob lists corresponding to 
+                  node index"""
+    def __init__(self, nodes, children, observations):
         self.graphDict = {}
         self.graphList = nodes
+        #HMM Formal Defn
+        self.states = nodes
+        self.observations = observations
         self.root = nodes[0]
         self.end = nodes[-1]
+        self.AMatrix = None
+        self.BMatrix = None
+        #TODO: INITIALIZE A AND B
         for i in range(len(nodes)):
             self.graphDict[nodes[i]] = children[i]
 
@@ -127,8 +135,7 @@ def FwdAlg(obList, graph):
             evalStep = lambda x : fwd[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             fwd[t][s] = sum(map(evalStep, fwd[t-1]))
     # Termination TODO: fix for iteration (copy bwd)
-    termStep = lambda s:fwd[len(obList)][s]*graph.a(s,graph.getEnd())
-    termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getEnd()]
+     termStep = lambda s : fwd[len(objList)-1][s] * graph.a[graph.list()[s], graph.getEnd()]
     return sum(map(termStep, range(len(graph.list()))))
 
 
@@ -205,4 +212,11 @@ def BwdAlg(obList, graph):
     return sum(map(termStep, range(len(graph.list()))))
 
 
+""" Executes the xi function
+"""
+def xi(t, i, j, graph):
+    
+
+
 #TODO: Implement Fwd-Bwd Algo 
+def forward_backward(obList, state set = )
