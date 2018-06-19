@@ -213,26 +213,31 @@ def ViterbiAlg(obList, graph):
             sequence of vocab of set of all possible observations from [graph]
     [graph]: graph of N states representing an L-R HMM
     returns probability of observing the observation sequence [obList] in [graph]"""
-def BwdAlg(obList, graph):
+def BwdAlg(obList, graph, initial=None, T=None):
+    initial = initial if initial != None else graph.getStart()
+    T = T if T != None else len(obList) 
     # Initialize matrices
     BMatrix = [[0.0 for z in range(graph.size())] for z in range(len(obList))]
     finalRow = []
-    qf = graph.getFinal()
     for node in graph.list():
-        finalRow.append(graph.a(node, qf))
+        finalRow.append(graph.a(node, graph.getFinal()))
     BMatrix[-1] = finalRow
     # Iteration
-    for dt in range(len(obList)-1):
+    for dt in range(T-1):
         t = len(obList) - dt - 2
         for i in range(graph.size()):
             s = graph.elt(i)
             evalStep = lambda j : graph.a(graph.elt(j),s) * graph.b(s, obList[t+1]) * BMatrix[t+1][j]
             print(t, i, s)
+            print(BMatrix)
             BMatrix[t][i] = sum(map(evalStep, range(graph.size())))
     # Termination
-    termStep = lambda j : graph.a(graph.getStart(), graph.elt(j)) * graph.b(graph.elt(j),obList[0]) * BMatrix[1][j]
+    tfinal = len(obList) - T
+    termStep = lambda j : graph.a(graph.getStart(), graph.elt(j)) * graph.b(graph.elt(j),obList[0]) * BMatrix[tfinal+1][j]
+    BMatrix[tfinal][0] = sum(map(termStep, range(graph.size())))
     print(BMatrix)
-    return sum(map(termStep, range(graph.size())))
+    print(T, tfinal)
+    return BMatrix[tfinal][graph.index(initial)]
 
 
 """ Executes the xi function
