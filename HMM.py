@@ -25,11 +25,18 @@ class Graph(object):
                 except ValueError:
                     print("%s (child) isn't found in the node list" %child)
             self.V = self.V | set([e[0] for e in obs])
+        self.V = sorted(self.V)
         for i in range(len(data)):
             obs = data[i][2]
-            self.B.append(obs)
+            BCol = [0 for x in range(len(self.V))]
+            for ob, prob in obs:
+                ind = self.V.index(ob)
+                BCol[ind] = prob
+            print BCol
+            self.B[i] = BCol
         self.start = data[0][0]
         self.final = data[-1][0]
+        print(self.B)
 
 # --- Setters & Getters ---
     """ Gets root of the graph """
@@ -118,7 +125,7 @@ class Graph(object):
     """ Returns the likelihood of the given [observation]
     Pre-conditions:
     state: is a node in the graph
-    observation: is an observation recorded by the node. """
+    observation: is in vocabulary V. """
     def b(self, state, observation, ints=False):
         if ints:
             i = state
@@ -128,11 +135,8 @@ class Graph(object):
             except ValueError:
                 print("%s was not found in the graph" %state)
                 raise ValueError()
-        obList = self.B[i]
-        for k, v in obList:
-            if observation == k:
-                return v
-        return 0
+        j = self.V.index(observation):
+        return self.B[i][j]
 
 
 """Executes Forward Algorithm on graph object graph
@@ -142,7 +146,7 @@ class Graph(object):
         representing a probability & all paths travel in one direction.
     returns the probability of observing the observation sequence [obList] in [graph]
     alpha(t, q) where q is implicitly the final state, and t is the length of [obList]"""
-def FwdAlg(obList, graph, T=None, final=None):
+def FwdAlg(obList, graph, final=None, T=None):
     final = final if final != None else graph.getFinal()
     T = T if T != None else len(obList)
     # Initialize
@@ -215,7 +219,7 @@ def ViterbiAlg(obList, graph):
             sequence of vocab of set of all possible observations from [graph]
     [graph]: graph of N states representing an L-R HMM
     returns probability of observing the observation sequence [obList] in [graph]"""
-def BwdAlg(obList, graph, T=None, initial=None):
+def BwdAlg(obList, graph, initial=None, T=None):
     initial = initial if initial != None else graph.getStart()
     T = T if T != None else len(obList) 
     # Initialize matrices
