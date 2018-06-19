@@ -30,70 +30,96 @@ class Graph(object):
         self.final = data[-1][0]
 
     # --- Setters & Getters ---
-    """ Gets root of the graph """
-    def getStart(self):
-        return self.start
+        """ Gets root of the graph """
+        def getStart(self):
+            return self.start
 
-    """ Gets end node of the graph """
-    def getFinal(self):
-        return self.final
-    
-    """ Sets new root of the graph 
-    Pre-conditions:
-    newStart: is an orphan node that exists already in the graph """
-    def setStart(self, newStart):
-        self.start = newStart
+        """ Gets end node of the graph """
+        def getFinal(self):
+            return self.final
+        
+        """ Sets new root of the graph 
+        Pre-conditions:
+        newStart: is an orphan node that exists already in the graph """
+        def setStart(self, newStart):
+            self.start = newStart
 
-    """ Sets new end node of the graph 
-    Pre-conditions:
-    newFinal: is an orphan node that exists already in the graph """
-    def setFinal(self, newFinal):
-        self.final = newFinal
+        """ Sets new end node of the graph 
+        Pre-conditions:
+        newFinal: is an orphan node that exists already in the graph """
+        def setFinal(self, newFinal):
+            self.final = newFinal
 
-    """ Returns the size of the graph """
-    def size(self):
-        return len(self.Q)
+        """ Returns the size of the graph """
+        def size(self):
+            return len(self.Q)
 
-    """ Returns the list of nodes of the graph"""
-    def list(self):
-        return self.Q
-    
-    """ Returns the [i]th element of the graph
-    Pre-conditions
-    [i]: i < self.size()"""
-    def elt(self, i):
-        return self.Q[i]
-    
+        """ Returns the list of nodes of the graph"""
+        def list(self):
+            return self.Q
+        
+        """ Returns the [i]th element of the graph
+        Pre-conditions
+        [i]: i < self.size()"""
+        def elt(self, i):
+            return self.Q[i]
+        
+        """ Gets A of the graph """
+        def getA(self):
+            return self.A
+
+        """ Gets B of the graph """
+        def getB(self):
+            return self.B
+        
+        """ Sets new A of the graph 
+        Pre-conditions:
+        newA: is an orphan node that exists already in the graph """
+        def setA(self, newA):
+            self.A = newA
+
+        """ Sets new B of the graph 
+        Pre-conditions:
+        newB: is an orphan node that exists already in the graph """
+        def setB(self, newB):
+            self.B = newB
+        
     # --- Real methods ---
-    """ Returns the weight between nodes [parent] and [child]. 
-    Pre-conditions: 
-    parent: is a node in the graph. 
-    child: is a node in the graph. There must be a direct connection from 
-           [parent] to [child]. """
-    def a(self, parent, child):
-        try:
-            i = self.Q.index(parent)
-            j = self.Q.index(child)
-        except ValueError:
-            print("%s or %s were not found in graph's Q set" %(parent, child))
-            raise ValueError()
-        return self.A[i][j]
+        """ Returns the weight between nodes [parent] and [child]. 
+        Pre-conditions: 
+        parent: is a node in the graph. 
+        child: is a node in the graph. There must be a direct connection from 
+            [parent] to [child]. """
+        def a(self, parent, child, ints=False):
+            if ints:
+                i, j = parent, child
+            else: 
+                try:
+                    i = self.Q.index(parent)
+                    j = self.Q.index(child)
+                except ValueError:
+                    print("%s or %s were not found in graph's Q set" %(parent, child))
+                    raise ValueError()
+            return self.A[i][j]
 
-    """ Returns the likelihood of the given [observation]
-    Pre-conditions:
-    state: is a node in the graph
-    observation: is an observation recorded by the node. """
-    def b(self, state, observation):
-        try:
-            i = self.Q.index(state)
-        except ValueError:
-            print("%s was not found in the graph" %state)
-            raise ValueError()
-        obList = self.B[i]
-        for k, v in obList:
-            if observation == k:
-                return v
-        return 0
+        """ Returns the likelihood of the given [observation]
+        Pre-conditions:
+        state: is a node in the graph
+        observation: is an observation recorded by the node. """
+        def b(self, state, observation, ints=False):
+            if ints:
+                i = state
+            else:
+                try:
+                    i = self.Q.index(state)
+                except ValueError:
+                    print("%s was not found in the graph" %state)
+                    raise ValueError()
+            obList = self.B[i]
+            for k, v in obList:
+                if observation == k:
+                    return v
+            return 0
 
 
 """Executes Forward Algorithm on graph object graph
@@ -194,11 +220,17 @@ def BwdAlg(obList, graph):
     return sum(map(termStep, range(graph.size())))
 
 
-# """ Executes the xi function
-# """
-# def xi(t, i, j, graph):
-    
-
+""" Executes the xi function
+"""
+def xi(t, i, j, obList, graph):
+    fwdObs = obList[:t]
+    bwdObs = obList[t+1:]
+    alph = FwdAlg(fwdObs, graph)
+    beta = BwdAlg(bwdObs, graph)
+    a = graph.a(i, j, True)
+    b = graph.b(j, t, True)
+    fullalpha = FwdAlg(obList, graph)
+    return (alph * a * b * beta)/fullalpha
 
 # #TODO: Implement Fwd-Bwd Algo 
 # def forward_backward(obList, state set = )
