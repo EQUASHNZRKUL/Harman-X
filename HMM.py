@@ -14,7 +14,7 @@ class Graph(object):
         self.Q = [x[0] for x in data]
         self.A = [[0 for x in range(len(data))] for x in range(len(data))]
         self.V = set()
-        self.B = []
+        self.B = [[] for x in range(len(data))]
         # field instantiation
         for i in range(len(data)):
             _, children, obs = data[i]
@@ -25,6 +25,8 @@ class Graph(object):
                 except ValueError:
                     print("%s (child) isn't found in the node list" %child)
             self.V = self.V | set([e[0] for e in obs])
+        for i in range(len(data)):
+            obs = data[i][2]
             self.B.append(obs)
         self.start = data[0][0]
         self.final = data[-1][0]
@@ -243,18 +245,21 @@ def BwdAlg(obList, graph, T=None, initial=None):
 """ Executes the xi function
 """
 def xi(t, i, j, obList, graph):
-    fwdObs = obList[:t]
-    bwdObs = obList[t+1:]
     alph = FwdAlg(obList, graph, graph.index(i), t)
     beta = BwdAlg(obList, graph, graph.index(j), len(obList) - t)
     a = graph.a(i, j, True)
     b = graph.b(j, t, True)
-    fullalpha = FwdAlg(obList, graph)
-    return (alph * a * b * beta)/fullalpha
+    fullprob = FwdAlg(obList, graph)
+    return (alph * a * b * beta)/fullprob
 
 """ Executes the gamma function"""
 def gamma(t, j, obList, graph):
-    FwdAlg(obList, graph, t, )
+    alph = FwdAlg(obList, graph, graph.index(j), t)
+    beta = BwdAlg(obList, graph, graph.index(j), len(obList) - t)
+    fullprob = FwdAlg(obList, graph)
+    return (alph * beta)/fullprob
 
-# #TODO: Implement Fwd-Bwd Algo 
-# def forward_backward(obList, state set = )
+#TODO: Implement Fwd-Bwd Algo 
+def forward_backward(obList, states):
+    A = [[0 for x in range(len(states))] for x in range(len(states))]
+    B = [[0 for x in range(len(states))] for x in range(len(obList))]
