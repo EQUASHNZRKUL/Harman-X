@@ -106,12 +106,9 @@ def FwdAlg(obList, graph):
     for dt in range(len(obList)-1):
         t = dt + 1
         for i in range(graph.size()):
-            print("i: %s" %i)
-            print("t: %s" %t)
             s = graph.list()[i]
             evalStep = lambda x : fwd[t-1][x] * graph.a(graph.list()[x], s) * graph.b(s, obList[t])
             fwd[t][i] = sum(map(evalStep, range(graph.size())))
-            print(fwd)
     # Termination
     termStep = lambda s : fwd[len(obList)-1][s] * graph.a(graph.list()[s], graph.getFinal())
     return sum(map(termStep, range(len(graph.list()))))
