@@ -58,6 +58,12 @@ class Graph(object):
     def list(self):
         return self.Q
     
+    """ Returns the [i]th element of the graph
+    Pre-conditions
+    [i]: i < self.size()"""
+    def elt(self, i):
+        return self.Q[i]
+    
     # --- Real methods ---
     """ Returns the weight between nodes [parent] and [child]. 
     Pre-conditions: 
@@ -91,46 +97,48 @@ class Graph(object):
 
 
 """Executes Forward Algorithm on graph object graph
-Pre-conditions:
-obList: set of all possible observations from every node of [graph]
-graph: graph of N states representing a L-R HMM (each path has a weight
-       representing a probability & all paths travel in one direction.
-returns the probability of observing the observation sequence [obList] in [graph]"""
+    Pre-conditions:
+    obList: set of all possible observations from every node of [graph]
+    graph: graph of N states representing a L-R HMM (each path has a weight
+        representing a probability & all paths travel in one direction.
+    returns the probability of observing the observation sequence [obList] in [graph]"""
 def FwdAlg(obList, graph):
     # Initialize
     fwd = [[0.0 for z in range(graph.size())] for z in range(len(obList))]
     for i in range(graph.size()):
-        s = graph.list()[i]
+        s = graph.elt(i)
         fwd[0][i] = graph.a(graph.getStart(), s) * graph.b(s,obList[0])
     # Iteration
     for dt in range(len(obList)-1):
         t = dt + 1
         for i in range(graph.size()):
-            s = graph.list()[i]
-            evalStep = lambda x : fwd[t-1][x] * graph.a(graph.list()[x], s) * graph.b(s, obList[t])
+            s = graph.elt(i)
+            evalStep = lambda x : fwd[t-1][x] * graph.a(graph.elt(x), s) * graph.b(s, obList[t])
             fwd[t][i] = sum(map(evalStep, range(graph.size())))
     # Termination
-    termStep = lambda s : fwd[len(obList)-1][s] * graph.a(graph.list()[s], graph.getFinal())
-    return sum(map(termStep, range(len(graph.list()))))
+    termStep = lambda s : fwd[len(obList)-1][s] * graph.a(graph.elt(s), graph.getFinal())
+    print(fwd)
+    return sum(map(termStep, range(graph.size())))
+
 
 """ Executes Viterbi Algorithm on a HMM graph object
-Pre-conditions:
-obList: set of all possible observations from every node of [graph]
-graph: graph of N states representing a L-R HMM (each path has a weight
-       representing a probability & all paths travel in one direction.
-returns the path most likely to observe observation sequence [obList] in [graph]"""
+    Pre-conditions:
+    obList: set of all possible observations from every node of [graph]
+    graph: graph of N states representing a L-R HMM (each path has a weight
+        representing a probability & all paths travel in one direction.
+    returns the path most likely to observe observation sequence [obList] in [graph]"""
 def ViterbiAlg(obList, graph):
     # Initialize matrices
     vit = [[None for x in graph.size()] for x in range(len(obList))]
     backpoint = [[None for x in graph.size()] for x in range(len(obList))]
     for i in range(graph.size()):
-        s = graph.list()[i]
+        s = graph.elt(i)
         vit[1][i] = graph.a(0, s) * s.b(obList[i])
         backpoint[1][i] = 0
     # Iteration/Calculation
     for t in range(len(obList)-2):
         for i in range(graph.size()):
-            s = graph.list()[i]
+            s = graph.elt(i)
             evalStep = lambda x : vit[t-1][x] * graph.a(x, s) * s.b(obList[t]) 
             vit[t][s] = max(map(evalStep, vit))
             for j in range(graph.size()):
@@ -138,8 +146,8 @@ def ViterbiAlg(obList, graph):
                     backpoint[t][s] = j
                     break
     # Termination
-    termStep = lambda s:vit[len(obList)-1][s]*graph.a(graph.list()[s],graph.getFinal())
-    vit[-1][-1] = max(map(termStep, range(len(graph.list()))))
+    termStep = lambda s:vit[len(obList)-1][s]*graph.a(graph.elt(s),graph.getFinal())
+    vit[-1][-1] = max(map(termStep, range(graph.size())))
     for j in range(graph.size()):
         if termStep(j) == vit[-1][-1]:
             backpoint[-1][-1] = j
@@ -156,34 +164,34 @@ def ViterbiAlg(obList, graph):
 
 
 """ Executes Backward Algorithm on graph object [graph] given observation seq
-[obList] and returns a Beta value. Beta representing the probability of seeing the 
-observation sequence from time t+1 to end time T given the current state @ time
-t and given the current graph. 
-Pre-conditions:
-[obList]: if length of obList is d, function returns B[T-d-1:T]
-          sequence of vocab of set of all possible observations from [graph]
-[graph]: graph of N states representing an L-R HMM
-
-returns probability of observing the observation sequence [obList] in [graph]"""
+    [obList] and returns a Beta value. Beta representing the probability of seeing the 
+    observation sequence from time t+1 to end time T given the current state @ time
+    t and given the current graph. 
+    Pre-conditions:
+    [obList]: if length of obList is d, function returns B[T-d-1:T]
+            sequence of vocab of set of all possible observations from [graph]
+    [graph]: graph of N states representing an L-R HMM
+    returns probability of observing the observation sequence [obList] in [graph]"""
 def BwdAlg(obList, graph):
     # Initialize matrices
-    # A/weight matrix from [t..T]
-    BMatrix = [[None for x in graph.size()] for x in range(len(obList))]
+    BMatrix = [[0.0 for z in range(graph.size())] for z in range(len(obList))]
     finalRow = []
     qf = graph.getFinal()
     for node in graph.list():
         finalRow.append(graph.a(node, qf))
     BMatrix[-1] = finalRow
     # Iteration
-    for dt in range(len(obList))-1:
-        t = len(obList) - dt - 1
+    for dt in range(len(obList)-1):
+        t = len(obList) - dt - 2
         for i in range(graph.size()):
-            s = graph.list()[i]
-            evalStep = lambda j : graph.a(j,s) * s.b(obList[t+1]) * BMatrix[t+1][j]
-            fwd[t][s] = sum(map(evalStep, fwd[t+1]))
+            s = graph.elt(i)
+            evalStep = lambda j : graph.a(graph.elt(j),s) * graph.b(s, obList[t+1]) * BMatrix[t+1][j]
+            print(t, i, s)
+            BMatrix[t][i] = sum(map(evalStep, range(graph.size())))
     # Termination
-    termStep = lambda j : graph.a(0, j) * graph.list()[j].b(obList[0]) * BMatrix[0][j]
-    return sum(map(termStep, range(len(graph.list()))))
+    termStep = lambda j : graph.a(graph.getStart(), graph.elt(j)) * graph.b(graph.elt(j),obList[0]) * BMatrix[1][j]
+    print(BMatrix)
+    return sum(map(termStep, range(graph.size())))
 
 
 # """ Executes the xi function
