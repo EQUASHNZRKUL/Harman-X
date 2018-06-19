@@ -18,4 +18,13 @@ h = HMM.Graph(data)
 trellis = HMM.FwdAlg(['3','1','3'], h)
 C11 = HMM.FwdAlg(['3','1','3'], h, 'HOT1', 1)
 
+import HMM
+q0children = [('HOT1', .8), ('COLD2', .2)]
+q1children = [('HOT1', .6), ('COLD2', .3), ('END3', .1)]
+q2children = [('HOT1', .4), ('COLD2', .5), ('END3', .1)]
+q3children = []
+q1obs = [('1', .2), ('2', .4), ('3', .4)]
+q2obs = [('1', .5), ('2', .4), ('3', .1)]
+data = [('START0', q0children, []),('HOT1', q1children, q1obs), ('COLD2', q2children, q2obs), ('END3', q3children, [])]
+h = HMM.Graph(data)
 backward = HMM.BwdAlg(['3', '1', '3'], h)
