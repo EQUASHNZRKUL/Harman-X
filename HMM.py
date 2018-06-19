@@ -135,7 +135,7 @@ class Graph(object):
             except ValueError:
                 print("%s was not found in the graph" %state)
                 raise ValueError()
-        j = self.V.index(observation):
+        j = self.V.index(observation)
         return self.B[i][j]
 
 
@@ -248,7 +248,7 @@ def BwdAlg(obList, graph, initial=None, T=None):
 
 """ Executes the xi function
 """
-def xi(t, i, j, obList, graph):
+def xi_func(t, i, j, obList, graph):
     alph = FwdAlg(obList, graph, graph.index(i), t)
     beta = BwdAlg(obList, graph, graph.index(j), len(obList) - t)
     a = graph.a(i, j, True)
@@ -257,13 +257,28 @@ def xi(t, i, j, obList, graph):
     return (alph * a * b * beta)/fullprob
 
 """ Executes the gamma function"""
-def gamma(t, j, obList, graph):
+def gamma_func(t, j, obList, graph):
     alph = FwdAlg(obList, graph, graph.index(j), t)
     beta = BwdAlg(obList, graph, graph.index(j), len(obList) - t)
     fullprob = FwdAlg(obList, graph)
     return (alph * beta)/fullprob
 
 #TODO: Implement Fwd-Bwd Algo 
-def forward_backward(obList, states):
-    A = [[0 for x in range(len(states))] for x in range(len(states))]
-    B = [[0 for x in range(len(states))] for x in range(len(obList))]
+def forward_backward(obList, graph):
+    A = [[0 for x in range(graph.size())] for x in range(graph.size())]
+    B = [[0 for x in range(graph.size())] for x in range(len(obList))]
+    converged = False
+    while converged == False:
+        #E-step
+        gammaArray = [[gamma_func(t, j, obList, graph) for j in range(graph.size())]
+                        for t in range(len(obList))]
+        xiArray = [[[xi_func(t, i, j, obList, graph) for j in range(graph.size())]
+                        for i in range(graph.size())]for t in range(len(obList))]
+        #M-step
+        for i in range(graph.size()):
+            for j in range(graph.size()):
+                acc = 0
+                num = reduce(lambda x, t : x + t, xiArray[i][j][:-1])
+                # denom = reduce(lambda a, t : a + t, 
+                #     reduce(lambda a, k : a + xiArray[i][k][t], range(graph.size())))
+                    
