@@ -140,7 +140,7 @@ class Graph(object):
         representing a probability & all paths travel in one direction.
     returns the probability of observing the observation sequence [obList] in [graph]
     alpha(t, q) where q is implicitly the final state, and t is the length of [obList]"""
-def FwdAlg(obList, graph, final=None, T=None):
+def FwdAlg(obList, graph, T=None, final=None):
     final = final if final != None else graph.getFinal()
     T = T if T != None else len(obList)
     # Initialize
@@ -213,7 +213,7 @@ def ViterbiAlg(obList, graph):
             sequence of vocab of set of all possible observations from [graph]
     [graph]: graph of N states representing an L-R HMM
     returns probability of observing the observation sequence [obList] in [graph]"""
-def BwdAlg(obList, graph, initial=None, T=None):
+def BwdAlg(obList, graph, T=None, initial=None):
     initial = initial if initial != None else graph.getStart()
     T = T if T != None else len(obList) 
     # Initialize matrices
@@ -245,13 +245,16 @@ def BwdAlg(obList, graph, initial=None, T=None):
 def xi(t, i, j, obList, graph):
     fwdObs = obList[:t]
     bwdObs = obList[t+1:]
-    alph = FwdAlg(fwdObs, graph)
-    beta = BwdAlg(bwdObs, graph)
+    alph = FwdAlg(obList, graph, graph.index(i), t)
+    beta = BwdAlg(obList, graph, graph.index(j), len(obList) - t)
     a = graph.a(i, j, True)
     b = graph.b(j, t, True)
     fullalpha = FwdAlg(obList, graph)
     return (alph * a * b * beta)/fullalpha
 
+""" Executes the gamma function"""
+def gamma(t, j, obList, graph):
+    FwdAlg(obList, graph, t, )
 
 # #TODO: Implement Fwd-Bwd Algo 
 # def forward_backward(obList, state set = )
