@@ -1,13 +1,12 @@
 class Graph(object):
-    """ Initializes a Graph object
-    Example: ('HOT1', ('HOT1',))
-    Pre-conditions:
-    nodes: list of nodes, the first node being the starting node (must be root),
-           last one being the final node
-    children: 2D matrix of nodes * floats, indexed by parent node. Must 
-              have same length as [nodes]
-    observations: indexed sequence of observation * prob lists corresponding to 
-                  node index"""
+    """ Initializes a Graph object with the given [data] (node * children * obs) list
+        Pre-conditions:
+        nodes: list of nodes, the first node being the starting node (must be root),
+            last one being the final node
+        children: 2D matrix of nodes * floats, indexed by parent node. Must 
+                have same length as [nodes]
+        observations: indexed sequence of observation * prob lists corresponding to 
+                    node index"""
     def __init__(self, data):
         # field declarations
         self.graphDict = {}
@@ -263,22 +262,34 @@ def gamma_func(t, j, obList, graph):
     fullprob = FwdAlg(obList, graph)
     return (alph * beta)/fullprob
 
-#TODO: Implement Fwd-Bwd Algo 
 def forward_backward(obList, graph):
     A = [[0 for x in range(graph.size())] for x in range(graph.size())]
     B = [[0 for x in range(graph.size())] for x in range(len(obList))]
     converged = False
     while converged == False:
         #E-step
-        gammaArray = [[gamma_func(t, j, obList, graph) for j in range(graph.size())]
-                        for t in range(len(obList))]
-        xiArray = [[[xi_func(t, i, j, obList, graph) for j in range(graph.size())]
-                        for i in range(graph.size())]for t in range(len(obList))]
+        gammaArray = [[gamma_func(t, j, obList, graph)for t in range(len(obList))]
+                        for j in range(graph.size())]
+        xiArray = [[[xi_func(t, i, j, obList, graph) for t in range(len(obList))]
+                        for j in range(graph.size())]for i in range(graph.size())]
         #M-step
-        for i in range(graph.size()):
+        for i in range(graph.size()): # ^a_ij calc
             for j in range(graph.size()):
-                acc = 0
                 num = reduce(lambda x, t : x + t, xiArray[i][j][:-1])
-                # denom = reduce(lambda a, t : a + t, 
-                #     reduce(lambda a, k : a + xiArray[i][k][t], range(graph.size())))
-                    
+                denom = reduce(lambda x, t : x + t, 
+                    map(lambda k : xiArray[i][k], range(graph.size())))
+                A[i][j] = num/denom
+        for j in range(graph.size()): # ^b_ij calc
+            for k in range(len(graph.V)):
+                num = 0
+                denom = 0
+                for t in range(len(obList)):
+                    gam = gammaArray[t][j]
+                    if obList[t] == graph.V[k]:
+                        num = num + gam
+                    denom = denom + gam
+                B[j][k] = num/denom
+        converged = abs(graph.A - A)/A < 0.01
+        graph.A = A
+        graph.B = B
+    return A, B
