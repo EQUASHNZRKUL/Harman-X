@@ -1,2 +1,5 @@
+#use "topfind";;
+#require "str";;
+#use "Filefinder.ml";;
 let sample = ["b0366 I forgot how easily I had taught myself from the printed page. "; "b0367 Any average young fellow can teach himself in a week. "; "b0368 Please do not think that I already know it all. "];;
 valid_lines sample ["taught"; "average"; "all"];;
