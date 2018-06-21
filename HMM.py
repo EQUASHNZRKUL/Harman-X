@@ -1,6 +1,6 @@
 class Graph(object):
     """ Initializes a Graph object with the given [data] (node * children * obs) list
-        Pre-conditions:
+        Pre-conditions: 
         nodes: list of nodes, the first node being the starting node (must be root),
             last one being the final node
         children: 2D matrix of nodes * floats, indexed by parent node. Must 
@@ -101,7 +101,6 @@ class Graph(object):
         except ValueError:
             print("%s was not found in graph's Q set" %node)
             return -1
-        
     
 # --- Real methods ---
     """ Returns the weight between nodes [parent] and [child]. 
@@ -166,7 +165,6 @@ def FwdAlg(obList, graph, final=None, T=None):
     print(fwd)
     return fwd[T-1][graph.index(final)]
 
-
 """ Executes Viterbi Algorithm on a HMM graph object
     Pre-conditions:
     obList: set of all possible observations from every node of [graph]
@@ -208,7 +206,6 @@ def ViterbiAlg(obList, graph):
         t = t - 1
     return vitBackTrace.prepend(0)
 
-
 """ Executes Backward Algorithm on graph object [graph] given observation seq
     [obList] and returns a Beta value. Beta representing the probability of seeing the 
     observation sequence from time t+1 to end time T given the current state @ time
@@ -244,9 +241,7 @@ def BwdAlg(obList, graph, initial=None, T=None):
     print(T, tfinal)
     return BMatrix[tfinal][graph.index(initial)]
 
-
-""" Executes the xi function
-"""
+""" Executes the xi function"""
 def xi_func(t, i, j, obList, graph):
     alph = FwdAlg(obList, graph, graph.index(i), t)
     beta = BwdAlg(obList, graph, graph.index(j), len(obList) - t)
@@ -262,6 +257,7 @@ def gamma_func(t, j, obList, graph):
     fullprob = FwdAlg(obList, graph)
     return (alph * beta)/fullprob
 
+""" Executes the forward_backward function"""
 def forward_backward(obList, graph):
     A = [[0 for x in range(graph.size())] for x in range(graph.size())]
     B = [[0 for x in range(graph.size())] for x in range(len(obList))]
