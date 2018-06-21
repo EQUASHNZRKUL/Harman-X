@@ -60,6 +60,7 @@ let rec valid_lines prompt_list cmdlist =
   * the wavs are audio representations of each prompt. The [text] and [audio] 
   * functions are dir -> prompt and dir -> wav location respectively. [acc] is 
   * the return list so far.*)
+  (*TODO: Probably can be done with a fold instead*)
 (* let rec find_words' cmdlist text audio filelist acc = 
   match filelist with
   | [] -> acc
@@ -73,11 +74,13 @@ let rec valid_lines prompt_list cmdlist =
   * of data points in dataset [foldername] with prompt access_function of [text]
   * and wav location access_function of [audio] that contain an instance of any 
   * word found in [cmdlist]. *)
-(* let find_words cmdlist text audio foldername = 
+let find_words cmdlist text audio foldername = 
   let filelist = list_of_files foldername in
-    let f acc file = 
-      let prompt = text h in
+  let validList = valid_lines filelist cmdlist in
 
-  List.fold_left fold_func [] filelist  *)
+    (* let f acc file = 
+      let prompt = text h in *)
+
+  List.fold_left fold_func [] filelist 
 
   (* find_words' cmdlist text audio filelist [] *)
