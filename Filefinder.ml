@@ -33,6 +33,14 @@ let accesstext_voxforge folder data =
 let accesswav_voxforge folder data wav = 
   String.concat "" [folder; "/"; data; "/wav/"; wav; ".wav"]
 
+(** [clean_list lst acc] is the list [lst] without the .DS_Store file in the
+  * folder with [acc] as the accumulator. *)
+  let rec clean_list lst acc = 
+    match lst with 
+    | [] -> acc
+    | ".DS_Store"::t -> acc @ t
+    | h::t -> clean_list t (List.rev (h::(List.rev acc)))
+
 
 (*  --- Dictionary Section ---  *)
 
@@ -70,21 +78,13 @@ let rec valid_lines prompt_list cmdlist audiofile acc = (**)
     else acc in (**)
   List.fold_left f acc prompt_list (**)
 
-(** [clean_list lst acc] is the list [lst] without the .DS_Store file in the
-  * folder with [acc] as the accumulator. *)
-let rec clean_list lst acc = 
-  match lst with 
-  | [] -> acc
-  | ".DS_Store"::t -> acc @ t
-  | h::t -> clean_list t (List.rev (h::(List.rev acc)))
-
 (** [find_words cmdlist text audio foldername] is the (wav * prompt) list 
   * of data points in dataset [foldername] with prompt access_function of [text]
   * and wav location access_function of [audio] that contain an instance of any 
   * word found in [cmdlist]. *)
 let find_words cmdlist text audio dataset = 
   let filelist = clean_list (list_of_files dataset) [] in
-    let f acc file = (*fold function to acc & process each file in the dataset*)
+    let f dict file = (*fold function to dict & process each file in dataset*)
       let promptlist = text dataset file in
-      valid_lines promptlist cmdlist (audio file) acc in
-    List.fold_left f [] filelist (**)
+      valid_lines promptlist cmdlist (audio file) dict in (*returns dict with all files so far*)
+    List.fold_left f D.empty filelist (*should be dict of wavids -> StringD Set*)
