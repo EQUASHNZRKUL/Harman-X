@@ -33,9 +33,26 @@ let accesstext_voxforge folder data =
 let accesswav_voxforge folder data wav = 
   String.concat "" [folder; "/"; data; "/wav/"; wav; ".wav"]
 
-(** [contains s1 s2] is true if s2 exists in s1 as a substring. 
+
+(*  --- Dictionary Section ---  *)
+
+module StringD = struct
+  type t = string
+  let compare s1 s2 = 
+  let cme = String.compare 
+  (String.lowercase_ascii (s1)) (String.lowercase_ascii (s2)) in 
+  if cme = 0 then `EQ else if cme > 0 then `GT else `LT  
+  let format fmt d = print_string d
+end
+
+module S = MakeSetOfDictionary (StringD) (MakeTreeDictionary)
+module D = MakeTreeDictionary (StringD) (S)
+
+(** [contains s1 s2] is true if s2 exists in s1 as a substring (case-blind). 
   * (s1 contains s2) == (s1 <-= s2) *)
-let (<-=) s1 s2 = 
+  let (<~=) s1 s2 = 
+  let s1 = String.lowercase_ascii s1 in
+  let s2 = String.lowercase_ascii s2 in
   let re = Str.regexp_string s2 in
   try ignore (Str.search_forward re s1 0); true
   with Not_found -> false
@@ -46,7 +63,7 @@ let (<-=) s1 s2 =
   * put into a list and returned in a tuple with their wav title. *)
 let rec valid_lines prompt_list cmdlist audiofile acc = 
   let f acc prompt = 
-    let filtered = List.filter (fun c -> prompt <-= c) cmdlist in
+    let filtered = List.filter (fun c -> prompt <~= c) cmdlist in
     if filtered != [] then (*command found in prompt, find wavid and cmd list*)
       let i = String.index prompt ' ' in
       (audiofile (String.sub prompt 0 i), filtered) :: acc
