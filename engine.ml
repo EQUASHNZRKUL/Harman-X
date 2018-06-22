@@ -189,15 +189,15 @@ struct
     | h::t -> if and_in_idx idx h then all_ands idx t else false
 
   let and_not idx ands nots =
-  if (all_ands idx ands) then 
-  let f k v acc = 
-    if (case_blind_mem k ands) then S.intersect v acc else acc in 
-  let g k v acc = 
-    if (case_blind_mem k nots) then S.difference acc v else acc in
-  let andSet = D.fold f (dirSet idx S.empty) (idx) in
-  let norSet = D.fold g andSet idx in
-  S.to_list norSet
-  else []
+    if (all_ands idx ands) then 
+    let f k v acc = 
+      if (case_blind_mem k ands) then S.intersect v acc else acc in 
+    let g k v acc = 
+      if (case_blind_mem k nots) then S.difference acc v else acc in
+    let andSet = D.fold f (dirSet idx S.empty) (idx) in
+    let norSet = D.fold g andSet idx in
+    S.to_list norSet
+    else []
 
   let format fmt idx =
     D.format fmt idx (* TODO: improve if you wish *)

@@ -1,5 +1,7 @@
 open Str
 open Sys
+open Data
+open Engine
 
 (** [read_file filename] is the string list of the text found in [filename] each
   * elt being a different line.*)
@@ -68,5 +70,4 @@ let find_words cmdlist text audio dataset =
     let f acc file = (*fold function to acc & process each file in the dataset*)
       let promptlist = text dataset file in
       valid_lines promptlist cmdlist (audio file) acc in
-    print_list filelist;
     List.fold_left f [] filelist
