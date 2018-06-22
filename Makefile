@@ -2,7 +2,7 @@
 # 	ocamlbuild -use-ocamlfind test_main.byte && ./test_main.byte
 
 compile:
-	ocamlbuild -use-ocamlfind data.cmo engine.cmo Filefinder.cmo
+	ocamlbuild -use-ocamlfind data.cmo data.cmi engine.cmo engine.cmi Filefinder.cmo
 
 # check:
 # 	bash checkenv.sh && bash checktypes.sh
