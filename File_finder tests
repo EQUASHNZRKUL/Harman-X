@@ -3,4 +3,7 @@
 #use "Filefinder.ml";;
 let sample = ["b0366 I forgot how easily I had taught myself from the printed page. "; "b0367 Any average young fellow can teach himself in a week. "; "b0368 Please do not think that I already know it all. "];;
 let simpleton x = x;;
-valid_lines sample ["taught"; "average"; "all"] simpleton [];;
+let cmdlist = ["taught"; "average"; "all"; "I"];;
+find_words cmdlist accesstext_voxforge (fun x y -> y) "FileFinderData";;
+
+valid_lines sample cmdlist simpleton [];;

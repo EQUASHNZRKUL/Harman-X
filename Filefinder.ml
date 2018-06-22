@@ -22,13 +22,14 @@ let list_of_files foldername =
 
 (** [accesstext_voxforge folder] is the access function for VoxForge prompts. It
   * returns the text representation of the data found in location [folder]. *)
-let accesstext_voxforge data = 
-  let dest = String.concat "" [data; "/etc/prompts-original"] in
+let accesstext_voxforge folder data = 
+  let dest = String.concat "/" [folder; data; "etc/prompts-original"] in
   read_file dest
 
 (** [accesswav_voxforge user files] returns the list of wave destinations of the
   * files named [files] in the [user] folder for VoxForge data. *)
-let accesswav_voxforge data wav = String.concat "" [data; "/wav/"; wav; ".wav"]
+let accesswav_voxforge folder data wav = 
+  String.concat "" [folder; "/"; data; "/wav/"; wav; ".wav"]
 
 (** [contains s1 s2] is true if s2 exists in s1 as a substring. 
   * (s1 contains s2) == (s1 <-= s2) *)
@@ -50,14 +51,26 @@ let rec valid_lines prompt_list cmdlist audiofile acc =
     else acc in
   List.fold_left f acc prompt_list
 
+let rec print_list lst = 
+  match lst with
+  | [] -> print_newline ()
+  | h::t -> print_string h; print_string ("; "); print_list t
+
+let rec clean_list lst acc = 
+  match lst with 
+  | [] -> acc
+  | ".DS_Store"::t -> acc @ t
+  | h::t -> clean_list t (List.rev (h::(List.rev acc)))
+
 (** [find_words cmdlist text audio foldername] is the (wav * prompt) list 
   * of data points in dataset [foldername] with prompt access_function of [text]
   * and wav location access_function of [audio] that contain an instance of any 
   * word found in [cmdlist]. *)
 let find_words cmdlist text audio dataset = 
-  let filelist = list_of_files dataset in
+  let filelist = clean_list (list_of_files dataset) [] in
     let f acc file = (*fold function to acc & process each file in the dataset*)
-      let promptlist = text file in
+      let promptlist = print_string "file: " ;print_string file; print_newline (); print_string dataset; 
+        text dataset file in
       valid_lines promptlist cmdlist (audio file) acc in
+    print_list filelist;
     List.fold_left f [] filelist
-  (* find_words' cmdlist text audio filelist [] *)
