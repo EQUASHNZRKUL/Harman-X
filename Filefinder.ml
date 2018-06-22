@@ -51,11 +51,8 @@ let rec valid_lines prompt_list cmdlist audiofile acc =
     else acc in
   List.fold_left f acc prompt_list
 
-let rec print_list lst = 
-  match lst with
-  | [] -> print_newline ()
-  | h::t -> print_string h; print_string ("; "); print_list t
-
+(** [clean_list lst acc] is the list [lst] without the .DS_Store file in the
+  * folder with [acc] as the accumulator. *)
 let rec clean_list lst acc = 
   match lst with 
   | [] -> acc
@@ -69,8 +66,7 @@ let rec clean_list lst acc =
 let find_words cmdlist text audio dataset = 
   let filelist = clean_list (list_of_files dataset) [] in
     let f acc file = (*fold function to acc & process each file in the dataset*)
-      let promptlist = print_string "file: " ;print_string file; print_newline (); print_string dataset; 
-        text dataset file in
+      let promptlist = text dataset file in
       valid_lines promptlist cmdlist (audio file) acc in
     print_list filelist;
     List.fold_left f [] filelist
