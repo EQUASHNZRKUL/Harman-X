@@ -61,14 +61,14 @@ module D = MakeTreeDictionary (StringD) (S)
   * is the list of prompts, each element corresponding to a separate 5 sec wav
   * recording, that contain a word from [cmdlist]. If they do exist, they are
   * put into a list and returned in a tuple with their wav title. *)
-let rec valid_lines prompt_list cmdlist audiofile acc = 
+let rec valid_lines prompt_list cmdlist audiofile acc = (**)
   let f acc prompt = 
     let filtered = List.filter (fun c -> prompt <~= c) cmdlist in
     if filtered != [] then (*command found in prompt, find wavid and cmd list*)
       let i = String.index prompt ' ' in
-      (audiofile (String.sub prompt 0 i), filtered) :: acc
-    else acc in
-  List.fold_left f acc prompt_list
+      (audiofile (String.sub prompt 0 i), filtered) :: acc (**)
+    else acc in (**)
+  List.fold_left f acc prompt_list (**)
 
 (** [clean_list lst acc] is the list [lst] without the .DS_Store file in the
   * folder with [acc] as the accumulator. *)
@@ -87,4 +87,4 @@ let find_words cmdlist text audio dataset =
     let f acc file = (*fold function to acc & process each file in the dataset*)
       let promptlist = text dataset file in
       valid_lines promptlist cmdlist (audio file) acc in
-    List.fold_left f [] filelist
+    List.fold_left f [] filelist (**)
