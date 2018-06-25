@@ -55,7 +55,7 @@ module S = MakeSetOfDictionary (StringD) (MakeTreeDictionary)
 module D = MakeTreeDictionary (StringD) (S)
 
 (** [contains s1 s2] is true if s2 exists in s1 as a substring (case-blind). 
-  * (s1 contains s2) == (s1 <-= s2) *)
+  * (s1 contains s2) == (s1 <~= s2) *)
   let (<~=) s1 s2 = 
   let s1 = String.lowercase_ascii s1 in
   let s2 = String.lowercase_ascii s2 in
@@ -88,10 +88,25 @@ let find_words cmdlist text audio dataset =
       valid_lines promptlist cmdlist (audio file) dict in 
     List.fold_left f D.empty filelist
 
-(* let insert k v dict = 
-  if D.member k dict then 
+let print_value set = 
+  let f k acc = 
+    Printf.printf "%s, " k; acc in
+  print_string "["; S.fold f [] set
 
-(** [commandfiles dict] is the dictionary of commands as keys and set of wavids
-  * for which the command exists *)
-let commandfiles dict = 
-  let f wavid cmdset acc =  *)
+let print_result dict = 
+  let f k v acc = 
+    Printf.printf "(%s, " k;
+    let acc = print_value v in
+    print_string "])"; print_newline ();
+    acc in
+  print_string "["; D.fold f [] dict
+
+let main () = 
+  let simpleton = fun x y -> y in
+  let cmdlist = ["taught"; "average"; "all"] in
+  let dirpath = "/users/justinkae/Documents/TensorFlowPractice/FileFinderData" in
+  let res = find_words cmdlist accesstext_voxforge simpleton dirpath in
+  print_result res
+  ;;
+
+main ()
