@@ -101,6 +101,17 @@ let print_result dict =
     acc in
   print_string "["; D.fold f [] dict
 
+let smart_insert k v dict = 
+  let val_opt = D.find k dict in
+  match val_opt with 
+  | None -> D.insert k v dict
+  | Some old_v -> 
+    let v' = S.insert v old_v in 
+    D.insert k v' dict
+
+let make_cmd_dict word_dict = 
+  D.fold smart_insert D.empty word_dict
+
 let main () = 
   let simpleton = fun x y -> y in
   let cmdlist = ["taught"; "average"; "all"] in
