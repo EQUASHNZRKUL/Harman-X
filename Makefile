@@ -16,7 +16,7 @@ check:
 clean:
 	ocamlbuild -clean
 	rm -f a3src.zip
-	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
 
 exec:
 	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml
