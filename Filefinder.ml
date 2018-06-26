@@ -21,24 +21,6 @@ let list_of_files foldername =
   let files = Sys.readdir foldername in
   Array.to_list files
 
-(** [accesstext_maker datadir textdir] is an access text function maker. Given 
-  * the path from the dataset folder to the data folder [datdir] and the path 
-  * from the data folder to the text transcript file [textdir] such that they 
-  * fulfill foldername/[datdir]/data/[textdir]. The resulting function returns
-  * the text location for a given [folder] and [data].*)
-let accesstext_maker datadir textdir = fun folder data -> 
-  let dest = String.concat "/" [folder; datadir; data; textdir] in
-  read_file dest
-
-(** [accesswav_maker datadir wavdir] is an access wav function maker. Given
-  * the path from the dataset folder to the data folder [datdir] and the path
-  * from the data folder to the wav audio file [wavdir] such that they 
-  * fulfill foldername/[datdir]/data/[wavdir]/wav.wav. The resulting function returns
-  * the text location for a given [folder], [data], [wav].*)
-let accesswav_maker datadir wavdir = fun folder data wav -> 
-  let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
-  String.concat "" [des; ".wav"]
-
 (** [accesstext_voxforge folder] is the access function for VoxForge prompts. It
   * returns the text representation of the data found in location [folder]. *)
 let accesstext_voxforge folder data = 
@@ -106,6 +88,24 @@ let find_words cmdlist text audio dataset =
       valid_lines promptlist cmdlist (audio file) dict in 
     List.fold_left f D.empty filelist
 
+(** [accesstext_maker datadir textdir] is an access text function maker. Given 
+  * the path from the dataset folder to the data folder [datdir] and the path 
+  * from the data folder to the text transcript file [textdir] such that they 
+  * fulfill foldername/[datdir]/data/[textdir]. The resulting function returns
+  * the text location for a given [folder] and [data].*)
+  let accesstext_maker datadir textdir = fun folder data -> 
+  let dest = String.concat "/" [folder; datadir; data; textdir] in
+  read_file dest
+
+(** [accesswav_maker datadir wavdir] is an access wav function maker. Given
+  * the path from the dataset folder to the data folder [datdir] and the path
+  * from the data folder to the wav audio file [wavdir] such that they 
+  * fulfill foldername/[datdir]/data/[wavdir]/wav.wav. The resulting function returns
+  * the text location for a given [folder], [data], [wav].*)
+let accesswav_maker datadir wavdir = fun folder data wav -> 
+  let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
+  String.concat "" [des; ".wav"]
+
 let print_value set = 
   let f k acc = 
     Printf.printf "%s, " k; acc in
@@ -133,7 +133,10 @@ let make_cmd_dict word_dict =
 let main () = 
   let simpleton = fun x y -> y in
   let cmdlist = ["taught"; "average"; "all"] in
-  let dirpath = "/users/justinkae/Documents/TensorFlowPractice/FileFinderData" in
+  let args = Sys.argv in
+  let dirpath = if argv.(1) = "" then "./FileFinderData" else argv.(1) in
+  let tacces = accesstext_maker args.(2) args.(3) in
+  let wacces = accesswav_maker args.(4) args.(5) in
   let res = find_words cmdlist accesstext_voxforge simpleton dirpath in
   print_string "argv: "; Array.iter (print_string) Sys.argv; print_newline ();
   print_result res
