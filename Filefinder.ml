@@ -21,6 +21,10 @@ let list_of_files foldername =
   let files = Sys.readdir foldername in
   Array.to_list files
 
+let accesstext_maker front back = fun folder data -> 
+  let dest = String.concat "/" [folder; front; data; back] in
+  read_file dest
+
 (** [accesstext_voxforge folder] is the access function for VoxForge prompts. It
   * returns the text representation of the data found in location [folder]. *)
 let accesstext_voxforge folder data = 
@@ -42,7 +46,7 @@ let accesswav_voxforge folder data wav =
 
 (*  --- Dictionary Section ---  *)
 
-  module StringD = struct
+module StringD = struct
   type t = string
   let compare s1 s2 = 
   let cme = String.compare 
@@ -101,22 +105,23 @@ let print_result dict =
     acc in
   print_string "["; D.fold f [] dict
 
-let smart_insert k v dict = 
+(* let smart_insert k v dict = 
   let val_opt = D.find k dict in
   match val_opt with 
-  | None -> D.insert k v dict
+  | None -> D.insert k (S.insert v S.empty) dict
   | Some old_v -> 
     let v' = S.insert v old_v in 
     D.insert k v' dict
 
 let make_cmd_dict word_dict = 
-  D.fold smart_insert D.empty word_dict
+  D.fold smart_insert D.empty word_dict *)
 
 let main () = 
   let simpleton = fun x y -> y in
   let cmdlist = ["taught"; "average"; "all"] in
   let dirpath = "/users/justinkae/Documents/TensorFlowPractice/FileFinderData" in
   let res = find_words cmdlist accesstext_voxforge simpleton dirpath in
+  print_string "argv: "; Array.iter (print_string) Sys.argv; print_newline ();
   print_result res
   ;;
 
