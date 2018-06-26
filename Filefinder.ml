@@ -119,12 +119,13 @@ let print_result dict =
     acc in
   print_string "["; D.fold f [] dict
 
-let rec getCmdList str acc i = 
+let rec getCmdList str acc = 
+  let j = String.index str ';' in
   try 
-    let j = String.index_from str i ';' in
-    getCmdList str ((String.sub str i j)::acc) j
-  with Not_found -> 
-    (String.sub str i (String.length str - i)):: acc
+    let str' = (String.sub str (j+1) (String.length str - j-1)) in
+    getCmdList (String.trim str') ((String.sub str 0 j)::acc)
+  with Not_found-> 
+    str::acc
 
 (* let smart_insert k v dict = 
   let val_opt = D.find k dict in
