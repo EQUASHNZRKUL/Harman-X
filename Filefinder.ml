@@ -21,9 +21,23 @@ let list_of_files foldername =
   let files = Sys.readdir foldername in
   Array.to_list files
 
-let accesstext_maker front back = fun folder data -> 
-  let dest = String.concat "/" [folder; front; data; back] in
+(** [accesstext_maker datadir textdir] is an access text function maker. Given 
+  * the path from the dataset folder to the data folder [datdir] and the path 
+  * from the data folder to the text transcript file [textdir] such that they 
+  * fulfill foldername/[datdir]/data/[textdir]. The resulting function returns
+  * the text location for a given [folder] and [data].*)
+let accesstext_maker datadir textdir = fun folder data -> 
+  let dest = String.concat "/" [folder; datadir; data; textdir] in
   read_file dest
+
+(** [accesswav_maker datadir wavdir] is an access wav function maker. Given
+  * the path from the dataset folder to the data folder [datdir] and the path
+  * from the data folder to the wav audio file [wavdir] such that they 
+  * fulfill foldername/[datdir]/data/[wavdir]/wav.wav. The resulting function returns
+  * the text location for a given [folder], [data], [wav].*)
+let accesswav_maker datadir wavdir = fun folder data wav -> 
+  let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
+  String.concat "" [des; ".wav"]
 
 (** [accesstext_voxforge folder] is the access function for VoxForge prompts. It
   * returns the text representation of the data found in location [folder]. *)
