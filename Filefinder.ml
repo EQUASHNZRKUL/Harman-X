@@ -119,6 +119,13 @@ let print_result dict =
     acc in
   print_string "["; D.fold f [] dict
 
+let rec getCmdList str acc i = 
+  try 
+    let j = String.index_from str i ';' in
+    getCmdList str ((String.sub str i j)::acc) j
+  with Not_found -> 
+    (String.sub str i (String.length str - i)):: acc
+
 (* let smart_insert k v dict = 
   let val_opt = D.find k dict in
   match val_opt with 
@@ -132,11 +139,11 @@ let make_cmd_dict word_dict =
 
 let main () = 
   let simpleton = fun x y -> y in
-  let cmdlist = ["taught"; "average"; "all"] in
   let args = Sys.argv in
-  let dirpath = if argv.(1) = "" then "./FileFinderData" else argv.(1) in
-  let taccess = accesstext_maker args.(2) args.(3) in
-  let waccess = accesswav_maker args.(4) args.(5) in
+  let cmdlist = getCmdList argv.(1) in
+  let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(1) in
+  let taccess = accesstext_maker args.(3) args.(4) in
+  let waccess = accesswav_maker args.(5) args.(6) in
   let res = find_words cmdlist taccess simpleton dirpath in
   print_string "argv: "; Array.iter (print_string) Sys.argv; print_newline ();
   print_result res

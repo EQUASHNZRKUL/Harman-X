@@ -20,4 +20,4 @@ clean:
 
 exec:
 	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml
-	./Filefinder
+	./Filefinder "taught; average; all" "./FileFinderData" "" "etc/prompts-original" "" "wav"
