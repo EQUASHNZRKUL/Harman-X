@@ -135,9 +135,9 @@ let main () =
   let cmdlist = ["taught"; "average"; "all"] in
   let args = Sys.argv in
   let dirpath = if argv.(1) = "" then "./FileFinderData" else argv.(1) in
-  let tacces = accesstext_maker args.(2) args.(3) in
-  let wacces = accesswav_maker args.(4) args.(5) in
-  let res = find_words cmdlist accesstext_voxforge simpleton dirpath in
+  let taccess = accesstext_maker args.(2) args.(3) in
+  let waccess = accesswav_maker args.(4) args.(5) in
+  let res = find_words cmdlist taccess simpleton dirpath in
   print_string "argv: "; Array.iter (print_string) Sys.argv; print_newline ();
   print_result res
   ;;
