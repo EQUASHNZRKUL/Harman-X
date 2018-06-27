@@ -131,31 +131,6 @@ let rec getCmdList str acc =
   with Not_found-> print_string "NF - "; print_string str;
     str::acc
 
-(* let smart_insert k v dict = 
-  let val_opt = D.find k dict in
-  match val_opt with 
-  | None -> D.insert k (S.insert v S.empty) dict
-  | Some old_v -> 
-    let v' = S.insert v old_v in 
-    D.insert k v' dict
-
-let make_cmd_dict' word_dict = 
-  D.fold smart_insert D.empty word_dict *)
-
-(* let rec make_cmd_dict word_dict cmd_dict = 
-  let word_opt = D.choose word_dict in
-  match word_opt with
-  | None -> cmd_dict
-  | Some (k,v) -> (
-    let word_dict' = D.remove k word_dict in
-    let val_opt = D.find k cmd_dict in
-    match val_opt with
-    | None -> make_cmd_dict word_dict' (D.insert k 
-      (S.insert v S.empty) cmd_dict)
-    | Some old_v -> 
-      let v' = S.insert v old_v in
-      make_cmd_dict word_dict' (D.insert k v' cmd_dict)) *)
-
 let rec make_cmd_dict word_dict cmd_dict = 
   let word_opt = D.choose word_dict in
   match word_opt with 
