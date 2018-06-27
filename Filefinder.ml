@@ -106,23 +106,29 @@ let accesswav_maker datadir wavdir = fun folder data wav ->
   let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
   String.concat "" [des; ".wav"]
 
-let print_list lst = 
-  let f x = print_string x in
-  List.iter f lst
+(* Print Functions *)
+  (** [print_list lst] prints the elements of string list [lst] *)
+  let print_list lst = 
+    let f x = print_string x in
+    List.iter f lst
 
-let print_value set = 
-  let f k acc = 
-    Printf.printf "%s, " k; acc in
-  print_string "["; S.fold f [] set
+  (** [print_value set] prints the elements of a set. *)
+  let print_value set = 
+    let f k acc = 
+      Printf.printf "%s, " k; acc in
+    print_string "["; S.fold f [] set
 
-let print_result dict = 
-  let f k v acc = 
-    Printf.printf "(%s, " k;
-    let acc = print_value v in
-    print_string "])"; print_newline ();
-    acc in
-  print_string "["; D.fold f [] dict
+  (** [print_result dict] prints the assoc_list representation of [dict]. *)
+  let print_result dict = 
+    let f k v acc = 
+      Printf.printf "(%s, " k;
+      let acc = print_value v in
+      print_string "])"; print_newline ();
+      acc in
+    print_string "["; D.fold f [] dict
 
+(** [getCmdList str acc] is the list representation of the commands found in the
+  * string [str], each separated by ';'. [acc] is the list so far. *)
 let rec getCmdList str acc = 
   try 
     let j = String.index str ';' in
@@ -131,6 +137,9 @@ let rec getCmdList str acc =
   with Not_found-> print_string "NF - "; print_string str;
     str::acc
 
+(** [make_cmd_dict word_dict cmd_dict] is the command dictionary (keys: commands
+  * values: sets of wavids) made from the wav dictionary [word_dict] (keys: wavs
+  * values: sets of commands) where cmd_dict acts like an accumulator. *)
 let rec make_cmd_dict word_dict cmd_dict = 
   let word_opt = D.choose word_dict in
   match word_opt with 
