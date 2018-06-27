@@ -180,7 +180,8 @@ let main () =
   let taccess = accesstext_maker args.(3) args.(4) in
   let waccess = accesswav_maker args.(3) args.(5) in
   let res = find_words cmdlist taccess simpleton dirpath in
-  print_result res
+  let cmd_dict = make_cmd_dict res D.empty in
+  print_result res @ print_result cmd_dict
   ;;
 
 main ()
