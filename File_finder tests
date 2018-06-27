@@ -7,3 +7,49 @@ let cmdlist = ["taught"; "average"; "all"; "I"];;
 find_words cmdlist accesstext_voxforge (fun x y -> y) "FileFinderData";;
 
 valid_lines sample cmdlist simpleton [];;
+
+
+/*** make_cmd_dict tests ***/
+
+#use "topfind";;
+#require "str";;
+#use "Filefinder.ml";;
+#use "Data.ml";;
+module StringD = struct
+  type t = string
+  let compare s1 s2 = 
+  let cme = String.compare 
+  (String.lowercase_ascii (s1)) (String.lowercase_ascii (s2)) in 
+  if cme = 0 then `EQ else if cme > 0 then `GT else `LT  
+  let format fmt d = print_string d
+end;;
+
+module S = MakeSetOfDictionary (StringD) (MakeListDictionary);;
+module D = MakeListDictionary (StringD) (S);;
+
+let rec make_cmd_dict word_dict cmd_dict = 
+  let word_opt = D.choose word_dict in
+  match word_opt with 
+  | None -> cmd_dict
+  | Some (wav, cmd_set) -> 
+    let f cmd acc_dict = (*insert the cmd into the acc_dict list with wav as key *)
+      let val_opt = D.find cmd acc_dict in
+      let v' = (match val_opt with
+      | None -> (S.insert wav S.empty)
+      | Some wav_set -> (S.insert wav wav_set)) in
+        D.insert cmd v' acc_dict in
+    let cmd_dict' = S.fold f cmd_dict cmd_set in
+    let word_dict' = D.remove wav word_dict in
+    make_cmd_dict word_dict' cmd_dict';;
+
+let s1 = S.insert "a" S.empty;;
+let s1' = S.insert "b" s1;;
+let s1' = S.insert "c" s1';;
+let s1' = S.insert "d" s1';;
+let d1 = D.insert "wav1" s1' D.empty;;
+let s2 = S.insert "s" s1;;
+let s2 = S.insert "d" s2;;
+let s2 = S.insert "f" s2;;
+let d1 = D.insert "wav2" s2 d1;;
+
+make_cmd_dict d1 D.empty;;
