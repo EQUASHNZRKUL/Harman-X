@@ -142,7 +142,7 @@ let rec getCmdList str acc =
 let make_cmd_dict' word_dict = 
   D.fold smart_insert D.empty word_dict *)
 
-let rec make_cmd_dict word_dict cmd_dict = 
+(* let rec make_cmd_dict word_dict cmd_dict = 
   let word_opt = D.choose word_dict in
   match word_opt with
   | None -> cmd_dict
@@ -150,10 +150,27 @@ let rec make_cmd_dict word_dict cmd_dict =
     let word_dict' = D.remove k word_dict in
     let val_opt = D.find k cmd_dict in
     match val_opt with
-    | None -> make_cmd_dict word_dict' (D.insert k (S.insert v S.empty) cmd_dict)
+    | None -> make_cmd_dict word_dict' (D.insert k 
+      (S.insert v S.empty) cmd_dict)
     | Some old_v -> 
       let v' = S.insert v old_v in
-      make_cmd_dict word_dict' (D.insert k v' cmd_dict))
+      make_cmd_dict word_dict' (D.insert k v' cmd_dict)) *)
+
+let f cmd acc_dict = (*insert the cmd into the acc_dict list with wav as key *)
+  let val_opt = D.find cmd acc_dict in
+  let v' = (match val_opt with
+  | None -> (S.insert wav S.empty)
+  | Some wav_set -> (S.insert wav wav_set)) in
+  D.insert cmd 
+
+let rec make_cmd_dict word_dict cmd_dict = 
+  let word_opt = D.choose word_dict in
+  match word_opt with 
+  | None -> cmd_dict
+  | Some (wav, cmd_set) -> 
+    let f cmd acc_dict = D.insert cmd  in
+    S.fold f cmd_dict cmd_set
+    
 
 let main () = 
   let simpleton = fun x y -> y in
