@@ -156,20 +156,20 @@ let make_cmd_dict' word_dict =
       let v' = S.insert v old_v in
       make_cmd_dict word_dict' (D.insert k v' cmd_dict)) *)
 
-let f cmd acc_dict = (*insert the cmd into the acc_dict list with wav as key *)
-  let val_opt = D.find cmd acc_dict in
-  let v' = (match val_opt with
-  | None -> (S.insert wav S.empty)
-  | Some wav_set -> (S.insert wav wav_set)) in
-  D.insert cmd 
-
 let rec make_cmd_dict word_dict cmd_dict = 
   let word_opt = D.choose word_dict in
   match word_opt with 
   | None -> cmd_dict
   | Some (wav, cmd_set) -> 
-    let f cmd acc_dict = D.insert cmd  in
-    S.fold f cmd_dict cmd_set
+    let f cmd acc_dict = (*insert the cmd into the acc_dict list with wav as key *)
+      let val_opt = D.find cmd acc_dict in
+      let v' = (match val_opt with
+      | None -> (S.insert cmd S.empty)
+      | Some wav_set -> (S.insert cmd wav_set)) in
+        D.insert wav v' acc_dict in
+    let cmd_dict' = S.fold f cmd_dict cmd_set in
+    let word_dict' = D.remove wav word_dict in
+    make_cmd_dict word_dict' cmd_dict'
     
 
 let main () = 
