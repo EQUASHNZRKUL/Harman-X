@@ -106,6 +106,10 @@ let accesswav_maker datadir wavdir = fun folder data wav ->
   let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
   String.concat "" [des; ".wav"]
 
+let print_list lst = 
+  let f x = print_string x in
+  List.iter f lst
+
 let print_value set = 
   let f k acc = 
     Printf.printf "%s, " k; acc in
@@ -120,11 +124,11 @@ let print_result dict =
   print_string "["; D.fold f [] dict
 
 let rec getCmdList str acc = 
-  let j = String.index str ';' in
   try 
+    let j = String.index str ';' in
     let str' = (String.sub str (j+1) (String.length str - j-1)) in
     getCmdList (String.trim str') ((String.sub str 0 j)::acc)
-  with Not_found-> 
+  with Not_found-> print_string "NF - "; print_string str;
     str::acc
 
 (* let smart_insert k v dict = 
@@ -135,18 +139,30 @@ let rec getCmdList str acc =
     let v' = S.insert v old_v in 
     D.insert k v' dict
 
-let make_cmd_dict word_dict = 
+let make_cmd_dict' word_dict = 
   D.fold smart_insert D.empty word_dict *)
+
+let rec make_cmd_dict word_dict cmd_dict = 
+  let word_opt = D.choose word_dict in
+  match word_opt with
+  | None -> cmd_dict
+  | Some (k,v) -> (
+    let word_dict' = D.remove k word_dict in
+    let val_opt = D.find k cmd_dict in
+    match val_opt with
+    | None -> make_cmd_dict word_dict' (D.insert k (S.insert v S.empty) cmd_dict)
+    | Some old_v -> 
+      let v' = S.insert v old_v in
+      make_cmd_dict word_dict' (D.insert k v' cmd_dict))
 
 let main () = 
   let simpleton = fun x y -> y in
   let args = Sys.argv in
-  let cmdlist = getCmdList argv.(1) in
-  let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(1) in
+  let cmdlist = getCmdList argv.(1) [] in
+  let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
   let taccess = accesstext_maker args.(3) args.(4) in
-  let waccess = accesswav_maker args.(5) args.(6) in
+  let waccess = accesswav_maker args.(3) args.(5) in
   let res = find_words cmdlist taccess simpleton dirpath in
-  print_string "argv: "; Array.iter (print_string) Sys.argv; print_newline ();
   print_result res
   ;;
 
