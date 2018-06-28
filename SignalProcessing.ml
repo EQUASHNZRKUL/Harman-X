@@ -1,4 +1,6 @@
 
+exception IncompatibleSizeError
+
 type audiosignal = {
   signal : float list;
   samplerate : float;
@@ -20,14 +22,39 @@ let (--) i j =
     if n < i then acc else ran (n-1) (n::acc) 
   in ran j []
 
+(** [arange i j s] is the list of every [s] numbers from [i] to [j] exclusive *)
 let arange i j s = 
   let rec ran n acc = 
     if n < i then acc else ran (n-s) (n::acc)
   in ran (j-1) []
 
+(** [tile l x acc] is a list of [x] l times. *)
+let rec tile l x acc = if l > 0 then tile (l-1) x (x::acc) else acc
+
 let zeros l acc = tile l 0 acc
 
-let rec tile l x acc = if l > 0 then tile (l-1) x (x::acc) else acc
+let rec transpose matrix = 
+  match matrix with
+  | [] -> []
+  | [] :: xss -> transpose xss
+  | (x::xs)::xss -> 
+    (x::List.map List.hd xss) :: transpose (xs :: List.map List.tl xss)
+
+(** [list_add l1 l2 acc] is the sum of lists A and B. A and B must be the same
+  * length. *)
+let rec list_add l1 l2 acc = 
+  match l1, l2 with
+  | [], [] -> List.rev acc
+  | (h1::t1), (h2::t2) -> list_add t1 t2 ((h1 + h2)::acc)
+  | _, _ -> raise IncompatibleSizeError
+
+(** [matrix_add A B acc] is the sum of matrices A and B. A and B must be the
+  * same shape. *)
+let rec matrix_add A B acc = 
+  match A,B with
+  | [],[] -> acc
+  | (ha::ta), (hb::tb) -> matrix_add ta tb ((list_add ha hb [])::acc)
+  | _, _ -> raise IncompatibleSizeError
 
 let preemphasis audiosignal = 
   let signal = List.tl audiosignal.signal in
@@ -48,7 +75,15 @@ let framesig signal flen fstep winfunc =
   let padded_len = (numframes - 1) * fstep + flen in
   let zeros = zeros (padded_len - siglen) [] in
   let padded_sig = signal @ zeros in 
-  let indices = tile()
+    let aindices = tile numframes (arange 0 flen 1) [] in
+    let bindices = tile flen (arange 0 (numframes * fstep) fstep) [] in 
+  let indices = matrix_add aindices (transpose bindices) [[]] in
+  let frames =
+    let g y x = padded_sig[x][y] in
+    let f y = List.map g y in
+    List.map f indices in
+  
+
   
 
 let hz2mel hz = 2595. *. (log10 (1. +. hz/.700.))
