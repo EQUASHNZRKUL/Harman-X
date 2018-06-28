@@ -9,7 +9,7 @@ def dscc(signal, samplerate=16000, winlen=0.025, winstep=0.01, numcep=13,
          ceplifter=22, appendEnergy=True, winfunc=lambda x:numpy.ones((x,))):
     feats, energies = base.fbank(signal, samplerate, winlen, winstep, nfilt, nfft, 
                             lowfreq, highfreq, preemph, winfunc)
-    # OBTAIN DELTA
+    feats = base.delta(feats, 2) # OBTAIN DELTA
     # GAUUSIANIZATION NONLINEARITY
     feats = numpy.log(feats)
     feats = dct(feats, type=2, axis=1, norm='ortho')[:,:numcep]
