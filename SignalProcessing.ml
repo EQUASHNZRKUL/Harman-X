@@ -64,6 +64,12 @@ let rec matrix_add A B acc =
   | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 (+) ha hb)::acc)
   | _, _ -> raise IncompatibleSizeError
 
+let rec matrix_op A B op acc = 
+  match A,B with
+  | [],[] -> acc
+  | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 op ha hb)::acc)
+  | _, _ -> raise IncompatibleSizeError
+
 let preemphasis audiosignal = 
   let signal = List.tl audiosignal.signal in
   let h = List.hd audiosignal.signal in
@@ -74,6 +80,18 @@ let preemphasis audiosignal =
   let signal = f 0 [] in
   h :: signal
 
+let rec sublist lst len acc = 
+  match lst with
+  | [] -> raise (Invalid_argument "lst length too short")
+  | h::t when len > 0 -> sublist t (len-1) (List.rev (h::(List.rev acc)))
+  | _ -> acc
+
+let remap alst bmatr = 
+  let bl = List.length bmatr in
+  let bh = List.length (List.hd bmatr) in
+  let aseg = sublist alst bh [] in
+  tile bl aseg []
+
 let framsig signal flen fstep winfunc = 
   let siglen = List.length signal in
   let flen = int_of_float (ceil flen) in
@@ -83,6 +101,14 @@ let framsig signal flen fstep winfunc =
   let padded_len = ((numframes - 1) * fstep + flen) in
   let zero_lst = zeros (padded_len - siglen) [] in
   let padded_sig = signal @ zero_lst in
+    let aindices = tile numframes (arange 0 flen 1) [] in
+    let bindices = tile flen (arange 0 (numframes * fstep) fstep) [] in
+  let indices = matrix_op aindices (transpose bindices) (+) [[]] in
+  let frames = remap padded_sig indices in
+  let win_output = winfunc flen in
+  let wins = tile win_output numframes [] in
+  matrix_op frames wins
+
 
 
 (* let framesig signal flen fstep winfunc = 
