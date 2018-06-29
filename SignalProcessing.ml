@@ -33,6 +33,60 @@ type audiosignal = {
   winfunc : int -> int list
 }
 
+(** fft.ml --- Cooley-Tukey fast Fourier transform algorithm *)
+
+  open Format
+  open Complex
+
+  (** [get_n_bits n] returns the number of bits of [n]. *)
+  let get_n_bits =
+    let rec aux n i =
+      if i = 1 then n
+      else if i > 0 && i land 1 = 0 then aux (n + 1) (i lsr 1)
+      else invalid_arg "invalid input length"
+    in
+    aux 0
+
+  (** [bitrev n i] bit-reverses [n]-digit integer [i]. *)
+  let bitrev =
+    let rec aux acc n i =
+      if n = 0 then acc else aux ((acc lsl 1) lor (i land 1)) (n - 1) (i lsr 1)
+    in
+    aux 0
+
+  let ( +! ) = add
+  let ( -! ) = sub
+  let ( *! ) = mul
+  let ( /! ) = div
+
+  let make_twiddle_factors len =
+    let pi = 3.14159265358979 in
+    let c = ~-. 2.0 *. pi /. float len in
+    Array.init (len / 2) (fun i -> exp { re = 0.; im = c *. float i })
+
+  let fft x =
+    let len = List.length x in
+    let n_bits = get_n_bits len in
+    let w = make_twiddle_factors len in
+    let y = Array.init len (fun i -> List.nth x (bitrev n_bits i)) in
+    let butterfly m n ofs =
+      for i = 0 to n / 2 - 1 do
+        let j, k = ofs + i, ofs + i + n / 2 in
+        let a, b = y.(j), y.(k) in
+        y.(j) <- a +! w.(i * m) *! b;
+        y.(k) <- a -! w.(i * m) *! b;
+      done
+    in
+    for nb = 1 to n_bits do
+      let n = 1 lsl nb in
+      let m = 1 lsl (n_bits - nb) in
+      for i = 0 to m - 1 do butterfly m n (n * i) done
+    done;
+    y
+
+
+(** sigproc.ml - Signal Processing functions**)
+
 let (--) i j = 
   let rec ran n acc = 
     if n < i then acc else ran (n-1) (n::acc) 
@@ -109,25 +163,13 @@ let framsig signal flen fstep winfunc =
   let wins = tile win_output numframes [] in
   matrix_op frames wins
 
+let magspec frames nfft = 
+  if List.length (List.hd frames) > nfft then 
+    print_string "frame length is greater than fft size, framew ill be truncated";
+  let complex_spec = 
 
-
-(* let framesig signal flen fstep winfunc = 
-  let siglen = List.length signal in
-  let flen = int_of_float (ceil flen) in
-  let fstep = int_of_float (ceil fstep) in
-  let numframes = (if siglen <= flen then 1 else 
-    1 + int_of_float (ceil (float_of_int (siglen - flen) /. float_of_int fstep))) in
-  let padded_len = (numframes - 1) * fstep + flen in
-  let zeros = zeros (padded_len - siglen) [] in
-  let padded_sig = signal @ zeros in 
-    let aindices = tile numframes (arange 0 flen 1) [] in
-    let bindices = tile flen (arange 0 (numframes * fstep) fstep) [] in 
-  let indices = matrix_add aindices (transpose bindices) [[]] in
-  let frames =
-    let g y x = padded_sig[x][y] in
-    let f y = List.map g y in
-    List.map f indices in *)
-  
+let powspec frames nfft = 
+  1.0 /. (nfft *. )
 
 let hz2mel hz = 2595. *. (log10 (1. +. hz/.700.))
 
@@ -137,6 +179,8 @@ let rec ones acc x =
   match x with
   | 1 -> 1::acc
   | _ -> ones (1::acc) (x-1)
+
+(* Base.ml - Main Driver functions *)
 
 let init_signal signal ?samplerate:(sr=16000.) ?winlen:(wl=0.025) ?winstep:(ws=0.01)
  ?numcep:(ncep=13) ?nfilt:(nflt=26) ?nfft:(nft=512) ?lowfreq:(lf=0.) 
