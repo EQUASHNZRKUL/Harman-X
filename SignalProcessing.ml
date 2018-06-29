@@ -1,6 +1,22 @@
 
 exception IncompatibleSizeError
 
+module type Matrix = sig
+  type elt
+  type t = elt list list
+  val rep_ok : t -> t
+  val empty : t
+  val is_empty : t -> bool
+  val size : t -> int
+  val add : elt -> t -> t
+  val remove : elt -> t -> t
+  val insert : t -> int -> int -> elt -> t
+  val insert_col : t -> int -> elt list -> t
+  val elt : t -> int -> int -> elt
+  val col : t -> int -> elt list
+  val map : ('a -> 'b) -> t -> t
+end
+
 type audiosignal = {
   signal : float list;
   samplerate : float;
@@ -66,7 +82,10 @@ let preemphasis audiosignal =
   let signal = f 0 [] in
   h :: signal
 
-let framesig signal flen fstep winfunc = 
+let framsig signal flen fstep winfunc = 
+  let signlen = List.length signal in
+
+(* let framesig signal flen fstep winfunc = 
   let siglen = List.length signal in
   let flen = int_of_float (ceil flen) in
   let fstep = int_of_float (ceil fstep) in
@@ -81,9 +100,7 @@ let framesig signal flen fstep winfunc =
   let frames =
     let g y x = padded_sig[x][y] in
     let f y = List.map g y in
-    List.map f indices in
-  
-
+    List.map f indices in *)
   
 
 let hz2mel hz = 2595. *. (log10 (1. +. hz/.700.))
