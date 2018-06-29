@@ -56,20 +56,12 @@ let rec transpose matrix =
   | (x::xs)::xss -> 
     (x::List.map List.hd xss) :: transpose (xs :: List.map List.tl xss)
 
-(** [list_add l1 l2 acc] is the sum of lists A and B. A and B must be the same
-  * length. *)
-let rec list_add l1 l2 acc = 
-  match l1, l2 with
-  | [], [] -> List.rev acc
-  | (h1::t1), (h2::t2) -> list_add t1 t2 ((h1 + h2)::acc)
-  | _, _ -> raise IncompatibleSizeError
-
 (** [matrix_add A B acc] is the sum of matrices A and B. A and B must be the
   * same shape. *)
 let rec matrix_add A B acc = 
   match A,B with
   | [],[] -> acc
-  | (ha::ta), (hb::tb) -> matrix_add ta tb ((list_add ha hb [])::acc)
+  | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 (+) ha hb)::acc)
   | _, _ -> raise IncompatibleSizeError
 
 let preemphasis audiosignal = 
@@ -83,7 +75,15 @@ let preemphasis audiosignal =
   h :: signal
 
 let framsig signal flen fstep winfunc = 
-  let signlen = List.length signal in
+  let siglen = List.length signal in
+  let flen = int_of_float (ceil flen) in
+  let fstep = int_of_float (ceil fstep) in
+  let numframes = (if siglen <= flen then 1 else 
+    1 + int_of_float (ceil (float_of_int (siglen - flen) /. float_of_int fstep))) in
+  let padded_len = ((numframes - 1) * fstep + flen) in
+  let zero_lst = zeros (padded_len - siglen) [] in
+  let padded_sig = signal @ zero_lst in
+
 
 (* let framesig signal flen fstep winfunc = 
   let siglen = List.length signal in
