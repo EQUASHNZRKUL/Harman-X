@@ -92,6 +92,14 @@ type audiosignal = {
     let rec ran n acc = 
       if n < i then acc else ran (n-1) (n::acc) 
     in ran j []
+  
+  (** [linspace i j n] is a list of [n] numbers evenly spaced between i and j *)
+  let rec linspace i j n = 
+    let diff = j -. i in
+    let off = diff /. (float_of_int (n-1)) in
+    let rec f x o n acc = if n = 0 then acc else
+      f (x +. o) o (n-1) ((x+.o)::acc) in
+    List.rev (f i off (n-1) [i])
 
   (** [arange i j s] is the list of every [s] numbers from [i] to [j] exclusive *)
   let arange i j s = 
@@ -210,6 +218,12 @@ type audiosignal = {
 
 (* Base.ml - Main Driver functions *)
 
+  let get_filterbanks nfilt nfft samplerate lowfreq highfreq = 
+    let hf = (match highfreq with | None -> samplerate /. 2 | Some x -> x) in
+    let lowmel = hz2mel lowfreq in
+    let highmel = hz2mel hf in
+    let melpoints = linspace lowmel highmel (nfilt+2)
+
   (** [init_signal ...] takes the signal and all settings and inits the 
     * audiosignal record. If setting args aren't given, uses default values. *)
   let init_signal signal ?samplerate:(sr=16000.) ?winlen:(wl=0.025) ?winstep:(ws=0.01)
@@ -244,4 +258,7 @@ type audiosignal = {
                 (audiosignal.winlen *. audiosignal.samplerate) audiosignal.winfunc in
     let powspec = powspec (matrix_unop frames float_of_int [[]]) 
                   (float_of_int audiosignal.nfft) in
-  
+    let f x = List.fold_left (+.) 0. x in
+    let energy = List.map f powspec in
+
+  let 
