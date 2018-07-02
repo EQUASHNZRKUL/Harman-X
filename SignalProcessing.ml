@@ -219,10 +219,28 @@ type audiosignal = {
 (* Base.ml - Main Driver functions *)
 
   let get_filterbanks nfilt nfft samplerate lowfreq highfreq = 
-    let hf = (match highfreq with | None -> samplerate /. 2 | Some x -> x) in
+    let hf = (match highfreq with | None -> samplerate /. 2. | Some x -> x) in
     let lowmel = hz2mel lowfreq in
     let highmel = hz2mel hf in
-    let melpoints = linspace lowmel highmel (nfilt+2)
+    let melpoints = linspace lowmel highmel (nfilt+2) in
+    let bin = List.map (fun x -> (nfft+.1.)*.(mel2hz x)/.samplerate) melpoints in
+    let bin = List.map floor bin in
+    let fbank = tile nfilt (zeros ((int_of_float nfft)/2 + 1) []) [[]] in
+    let f acc j = 
+      let r1 = (int_of_float (List.nth bin j)) -- (int_of_float (List.nth bin (j+1))) in
+      let r2 = (int_of_float (List.nth bin (j+1))) -- (int_of_float (List.nth bin (j+2))) in
+      let f i = (i - int_of_float (List.nth bin j)) / 
+        (int_of_float(List.nth bin (j+1) -. List.nth bin j)) in
+      let g i = (int_of_float (List.nth bin (j+1)) - i) / 
+        (int_of_float(List.nth bin (j+2) -. List.nth bin (j+1))) in
+      let l1 = List.map f r1 in
+      let l2 = List.map g r2 in
+      (l1::(fst acc), l2::(snd acc)) in
+    let l = List.fold_left f ([[]],[[]]) ((0)--nfilt) in
+    (List.hd (fst l)) :: (List.tl (snd l))
+
+
+
 
   (** [init_signal ...] takes the signal and all settings and inits the 
     * audiosignal record. If setting args aren't given, uses default values. *)
