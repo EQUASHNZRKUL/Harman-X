@@ -306,3 +306,13 @@ type audiosignal = {
     let ffb = List.map (fun l -> List.map float_of_int l) fb in
     let feat = dot powspec (transpose ffb) in
     feat, energy
+
+  let deltas lst n = 
+    let numframes = List.length lst in
+    let denom = 2 * List.fold_left (+) 0 (List.map (fun x -> x * x) (1--(n+1))) in
+    
+
+  let dscc audiosignal = 
+    let feat, energy = fbank audiosignal in
+    let feat = matrix_unop feat log [[]] in
+    let feat = 
