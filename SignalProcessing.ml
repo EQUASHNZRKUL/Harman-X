@@ -142,6 +142,32 @@ type audiosignal = {
     match A with
     | [] -> acc
     | (h::t) -> matrix_unop t op ((List.map op h)::acc)
+  
+  let rec mapn f lists =
+    assert (lists <> []);
+    if List.mem [] lists then
+      []
+    else
+      f (List.map List.hd lists) :: mapn f (List.map List.tl lists)
+   
+  let dot m1 m2 =
+    List.map
+      (fun row ->
+        mapn
+         (fun column ->
+           List.fold_left (+.) 0.
+            (List.map2 ( *. ) row column))
+         m2)
+      m1
+
+  (* let rec dot a b acc = 
+    let f a b acc = 
+      (match b with 
+      | [] -> acc
+      | l::t -> (let row = print_list l; List.map 
+        (fun h -> print_list h; List.fold_left (+) 0 (List.map2 ( * ) h l)) a in
+        dot a t (row::acc))) in
+    List.rev (f a (transpose b) []) *)
 
   (** [preemphasis audiosignal] is the signal after preemphasis filter is 
     * executed on [signal]. *)
@@ -239,9 +265,6 @@ type audiosignal = {
     let l = List.fold_left f ([[]],[[]]) ((0)--nfilt) in
     (List.hd (fst l)) :: (List.tl (snd l))
 
-
-
-
   (** [init_signal ...] takes the signal and all settings and inits the 
     * audiosignal record. If setting args aren't given, uses default values. *)
   let init_signal signal ?samplerate:(sr=16000.) ?winlen:(wl=0.025) ?winstep:(ws=0.01)
@@ -278,5 +301,8 @@ type audiosignal = {
                   (float_of_int audiosignal.nfft) in
     let f x = List.fold_left (+.) 0. x in
     let energy = List.map f powspec in
-
+    let fb = get_filterbanks audiosignal.nfilt audiosignal.nfft audiosignal.samplerate
+              audiosignal.lowfreq audiosignal.highfreq in
+    let ffb = List.map (fun l -> List.map float_of_int l) fb in
+    let feat = dot powspec (transpose fb)
   let 
