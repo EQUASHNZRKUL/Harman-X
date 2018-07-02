@@ -304,5 +304,5 @@ type audiosignal = {
     let fb = get_filterbanks audiosignal.nfilt audiosignal.nfft audiosignal.samplerate
               audiosignal.lowfreq audiosignal.highfreq in
     let ffb = List.map (fun l -> List.map float_of_int l) fb in
-    let feat = dot powspec (transpose fb)
-  let 
+    let feat = dot powspec (transpose ffb) in
+    feat, energy
