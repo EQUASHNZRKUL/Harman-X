@@ -25,5 +25,5 @@ exec:
 eval:
 # ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
 	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
-	./Filefinder "taught; average; all" "./FileFinderData" "" "etc/prompts-original" "wav"
+	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData" "" "etc/prompts-original" "wav"
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
