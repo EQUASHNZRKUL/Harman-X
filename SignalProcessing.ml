@@ -87,132 +87,141 @@ type audiosignal = {
 
 (** sigproc.ml - Signal Processing functions**)
 
-let (--) i j = 
-  let rec ran n acc = 
-    if n < i then acc else ran (n-1) (n::acc) 
-  in ran j []
+  let (--) i j = 
+    let rec ran n acc = 
+      if n < i then acc else ran (n-1) (n::acc) 
+    in ran j []
 
-(** [arange i j s] is the list of every [s] numbers from [i] to [j] exclusive *)
-let arange i j s = 
-  let rec ran n acc = 
-    if n < i then acc else ran (n-s) (n::acc)
-  in ran (j-1) []
+  (** [arange i j s] is the list of every [s] numbers from [i] to [j] exclusive *)
+  let arange i j s = 
+    let rec ran n acc = 
+      if n < i then acc else ran (n-s) (n::acc)
+    in ran (j-1) []
 
-(** [tile l x acc] is a list of [x] l times. *)
-let rec tile l x acc = if l > 0 then tile (l-1) x (x::acc) else acc
+  (** [tile l x acc] is a list of [x] l times. *)
+  let rec tile l x acc = if l > 0 then tile (l-1) x (x::acc) else acc
 
-let zeros l acc = tile l 0 acc
+  let zeros l acc = tile l 0 acc
 
-let rec transpose matrix = 
-  match matrix with
-  | [] -> []
-  | [] :: xss -> transpose xss
-  | (x::xs)::xss -> 
-    (x::List.map List.hd xss) :: transpose (xs :: List.map List.tl xss)
+  let rec transpose matrix = 
+    match matrix with
+    | [] -> []
+    | [] :: xss -> transpose xss
+    | (x::xs)::xss -> 
+      (x::List.map List.hd xss) :: transpose (xs :: List.map List.tl xss)
 
-(** [matrix_add A B acc] is the sum of matrices A and B. A and B must be the
-  * same shape. *)
-let rec matrix_add A B acc = 
-  match A,B with
-  | [],[] -> acc
-  | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 (+) ha hb)::acc)
-  | _, _ -> raise IncompatibleSizeError
+  (** [matrix_add A B acc] is the sum of matrices A and B. A and B must be the
+    * same shape. *)
+  let rec matrix_add A B acc = 
+    match A,B with
+    | [],[] -> acc
+    | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 (+) ha hb)::acc)
+    | _, _ -> raise IncompatibleSizeError
 
-let rec matrix_op A B op acc = 
-  match A,B with
-  | [],[] -> acc
-  | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 op ha hb)::acc)
-  | _, _ -> raise IncompatibleSizeError
+  let rec matrix_op A B op acc = 
+    match A,B with
+    | [],[] -> acc
+    | (ha::ta), (hb::tb) -> matrix_op ta tb op ((List.map2 op ha hb)::acc)
+    | _, _ -> raise IncompatibleSizeError
 
-let preemphasis audiosignal = 
-  let signal = List.tl audiosignal.signal in
-  let h = List.hd audiosignal.signal in
-  let rec f i acc = 
-    if i < List.length signal then f (i+1)
-      (((List.nth signal i) -. audiosignal.preemph *. 
-      (List.nth signal (List.length signal - i)))::acc) else acc in
-  let signal = f 0 [] in
-  h :: signal
+  (** [matrix_unop A op acc] is the result of executing [op] on all elts of [a] *)
+  let rec matrix_unop A op acc = 
+    match A with
+    | [] -> acc
+    | (h::t) -> matrix_unop t op ((List.map op h)::acc)
 
-let rec sublist lst len acc = 
-  match lst with
-  | [] -> raise (Invalid_argument "lst length too short")
-  | h::t when len > 0 -> sublist t (len-1) (List.rev (h::(List.rev acc)))
-  | _ -> acc
+  let preemphasis audiosignal = 
+    let signal = List.tl audiosignal.signal in
+    let h = List.hd audiosignal.signal in
+    let rec f i acc = 
+      if i < List.length signal then f (i+1)
+        (((List.nth signal i) -. audiosignal.preemph *. 
+        (List.nth signal (List.length signal - i)))::acc) else acc in
+    let signal = f 0 [] in
+    h :: signal
 
-let remap alst bmatr = 
-  let bl = List.length bmatr in
-  let bh = List.length (List.hd bmatr) in
-  let aseg = sublist alst bh [] in
-  tile bl aseg []
+  let rec sublist lst len acc = 
+    match lst with
+    | [] -> raise (Invalid_argument "lst length too short")
+    | h::t when len > 0 -> sublist t (len-1) (List.rev (h::(List.rev acc)))
+    | _ -> acc
 
-let framsig signal flen fstep winfunc = 
-  let siglen = List.length signal in
-  let flen = int_of_float (ceil flen) in
-  let fstep = int_of_float (ceil fstep) in
-  let numframes = (if siglen <= flen then 1 else 
-    1 + int_of_float (ceil (float_of_int (siglen - flen) /. float_of_int fstep))) in
-  let padded_len = ((numframes - 1) * fstep + flen) in
-  let zero_lst = zeros (padded_len - siglen) [] in
-  let padded_sig = signal @ zero_lst in
-    let aindices = tile numframes (arange 0 flen 1) [] in
-    let bindices = tile flen (arange 0 (numframes * fstep) fstep) [] in
-  let indices = matrix_op aindices (transpose bindices) (+) [[]] in
-  let frames = remap padded_sig indices in
-  let win_output = winfunc flen in
-  let wins = tile win_output numframes [] in
-  matrix_op frames wins
+  let remap alst bmatr = 
+    let bl = List.length bmatr in
+    let bh = List.length (List.hd bmatr) in
+    let aseg = sublist alst bh [] in
+    tile bl aseg []
 
-let magspec frames nfft = 
-  if List.length (List.hd frames) > nfft then 
-    print_string "frame length is greater than fft size, framew ill be truncated";
-  let complex_spec = 
+  let framesig signal flen fstep winfunc = 
+    let signal = List.map int_of_float signal in
+    let siglen = List.length signal in
+    let flen = int_of_float (ceil flen) in
+    let fstep = int_of_float (ceil fstep) in
+    let numframes = (if siglen <= flen then 1 else 
+      1 + int_of_float (ceil (float_of_int (siglen - flen) /. float_of_int fstep))) in
+    let padded_len = ((numframes - 1) * fstep + flen) in
+    let zero_lst = zeros (padded_len - siglen) [] in
+    let padded_sig = signal @ zero_lst in
+      let aindices = tile numframes (arange 0 flen 1) [] in
+      let bindices = tile flen (arange 0 (numframes * fstep) fstep) [] in
+    let indices = matrix_op aindices (transpose bindices) (+) [[]] in
+    let frames = remap padded_sig indices in
+    let win_output = winfunc flen in
+    let wins = tile numframes win_output [] in
+    matrix_op frames wins ( * ) [[]]
 
-let powspec frames nfft = 
-  1.0 /. (nfft *. )
+  let magspec frames = 
+    let complex_lst col = List.map (fun x -> polar x 0.0) col in
+    let complex_spec = List.map (fun col -> fft (complex_lst col)) frames in
+    List.map (fun col -> Array.to_list (Array.map (norm) col)) complex_spec
 
-let hz2mel hz = 2595. *. (log10 (1. +. hz/.700.))
+  let powspec frames nfft = 
+    let frames' = magspec frames in
+    let f col = List.map (fun x -> 1.0 /. (nfft *. x *. x)) col in
+    List.map f frames'
 
-let mel2hz mel = 700. *. (10. ** (mel/.2595.)-.1.)
+  let hz2mel hz = 2595. *. (log10 (1. +. hz/.700.))
 
-let rec ones acc x = 
-  match x with
-  | 1 -> 1::acc
-  | _ -> ones (1::acc) (x-1)
+  let mel2hz mel = 700. *. (10. ** (mel/.2595.)-.1.)
+
+  let rec ones acc x = 
+    match x with
+    | 1 -> 1::acc
+    | _ -> ones (1::acc) (x-1)
 
 (* Base.ml - Main Driver functions *)
 
-let init_signal signal ?samplerate:(sr=16000.) ?winlen:(wl=0.025) ?winstep:(ws=0.01)
- ?numcep:(ncep=13) ?nfilt:(nflt=26) ?nfft:(nft=512) ?lowfreq:(lf=0.) 
- ?highfreq:(hf=None) ?preemph:(prmf=0) ?ceplifter:(cpl=22) 
- ?appendEnergy:(appe=true) ?winfunc:(wf=ones []) = 
- {
-   signal = signal;
-   samplerate = sr;
-   winlen = wl;
-   winstep = ws;
-   numcep = ncep;
-   nfilt = nflt;
-   nfft = nft;
-   lowfreq = lf;
-   highfreq = hf;
-   preemph = prmf;
-   ceplifter = cpl;
-   appendEnergy = appe;
-   winfunc = wf
- }
+  let init_signal signal ?samplerate:(sr=16000.) ?winlen:(wl=0.025) ?winstep:(ws=0.01)
+  ?numcep:(ncep=13) ?nfilt:(nflt=26) ?nfft:(nft=512) ?lowfreq:(lf=0.) 
+  ?highfreq:(hf=None) ?preemph:(prmf=0) ?ceplifter:(cpl=22) 
+  ?appendEnergy:(appe=true) ?winfunc:(wf=ones []) = 
+  {
+    signal = signal;
+    samplerate = sr;
+    winlen = wl;
+    winstep = ws;
+    numcep = ncep;
+    nfilt = nflt;
+    nfft = nft;
+    lowfreq = lf;
+    highfreq = hf;
+    preemph = prmf;
+    ceplifter = cpl;
+    appendEnergy = appe;
+    winfunc = wf
+  }
 
-
-(** [fbank signal ...] is the list of mel-filterbank energy features from an 
-  * audio signal [signal]. [highfreq] is a float opt that either gives the upper
-  * bound of the filters or None indicating its samplerate/2. 
-*)
-let fbank audiosignal =
-  let highfreq = 
-    (match audiosignal.highfreq with 
-    | None -> audiosignal.samplerate/.2.0 | Some x -> x) in
-  let signal = preemphasis audiosignal in
-  let frames = framesig signal (signal.winlen * signal.samplerate) 
-               (signal.winlen * signal.samplerate) winfunc
-  let powspec = 
+  (** [fbank signal ...] is the list of mel-filterbank energy features from an 
+    * audio signal [signal]. [highfreq] is a float opt that either gives the upper
+    * bound of the filters or None indicating its samplerate/2. 
+  *)
+  let fbank audiosignal =
+    let highfreq = 
+      (match audiosignal.highfreq with 
+      | None -> audiosignal.samplerate/.2.0 | Some x -> x) in
+    let signal = preemphasis audiosignal in
+    let frames = framesig signal (audiosignal.winlen *. audiosignal.samplerate) 
+                (audiosignal.winlen *. audiosignal.samplerate) audiosignal.winfunc in
+    let powspec = powspec (matrix_unop frames float_of_int [[]]) 
+                  (float_of_int audiosignal.nfft) in
   
