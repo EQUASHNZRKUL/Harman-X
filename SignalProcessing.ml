@@ -87,6 +87,7 @@ type audiosignal = {
 
 (** sigproc.ml - Signal Processing functions**)
 
+  (** [(--) i j] is the list of values from i to j inclusive. *)
   let (--) i j = 
     let rec ran n acc = 
       if n < i then acc else ran (n-1) (n::acc) 
@@ -98,11 +99,13 @@ type audiosignal = {
       if n < i then acc else ran (n-s) (n::acc)
     in ran (j-1) []
 
-  (** [tile l x acc] is a list of [x] l times. *)
+  (** [tile l x acc] is a list of [x] [l] times. *)
   let rec tile l x acc = if l > 0 then tile (l-1) x (x::acc) else acc
 
+  (** [zeros l acc] is a list of zeros [l] times. *)
   let zeros l acc = tile l 0 acc
 
+  (** [transpose matrix] is the transposition of [matrix]*)
   let rec transpose matrix = 
     match matrix with
     | [] -> []
@@ -118,6 +121,8 @@ type audiosignal = {
     | (ha::ta), (hb::tb) -> matrix_add ta tb ((List.map2 (+) ha hb)::acc)
     | _, _ -> raise IncompatibleSizeError
 
+  (** [matrix_op A B op acc] is the result of executing [op] on each elt of [A]
+    * and [B]. *)
   let rec matrix_op A B op acc = 
     match A,B with
     | [],[] -> acc
@@ -130,6 +135,8 @@ type audiosignal = {
     | [] -> acc
     | (h::t) -> matrix_unop t op ((List.map op h)::acc)
 
+  (** [preemphasis audiosignal] is the signal after preemphasis filter is 
+    * executed on [signal]. *)
   let preemphasis audiosignal = 
     let signal = List.tl audiosignal.signal in
     let h = List.hd audiosignal.signal in
@@ -140,18 +147,24 @@ type audiosignal = {
     let signal = f 0 [] in
     h :: signal
 
+  (** [sublist lst len acc] is the first [len] chars of [lst]. *)
   let rec sublist lst len acc = 
     match lst with
     | [] -> raise (Invalid_argument "lst length too short")
     | h::t when len > 0 -> sublist t (len-1) (List.rev (h::(List.rev acc)))
     | _ -> acc
 
+  (** [remap alst bmatr] is the list [alst] mapped onto a matrix of dimensions
+    * of [bmatr]. *)
   let remap alst bmatr = 
     let bl = List.length bmatr in
     let bh = List.length (List.hd bmatr) in
     let aseg = sublist alst bh [] in
     tile bl aseg []
 
+  (** [framesig signal flen fstep winfunc] is the the matrix of [signal] framed
+    * into overlapping frames of length [frame_len] and number [frame_step] with
+    * window function [winfunc]. *)
   let framesig signal flen fstep winfunc = 
     let signal = List.map int_of_float signal in
     let siglen = List.length signal in
@@ -170,20 +183,26 @@ type audiosignal = {
     let wins = tile numframes win_output [] in
     matrix_op frames wins ( * ) [[]]
 
+  (** [magspec frames] is the magnitude spectrum of specs [frames]. *)
   let magspec frames = 
     let complex_lst col = List.map (fun x -> polar x 0.0) col in
     let complex_spec = List.map (fun col -> fft (complex_lst col)) frames in
     List.map (fun col -> Array.to_list (Array.map (norm) col)) complex_spec
 
+  (** [powspec frames nfft] is the power spectrum of frame matrix [frames] with
+    * number of frame offset [nfft]. *)
   let powspec frames nfft = 
     let frames' = magspec frames in
     let f col = List.map (fun x -> 1.0 /. (nfft *. x *. x)) col in
     List.map f frames'
 
+  (** [hz2mel hz] is the mel value of [hz]. *)
   let hz2mel hz = 2595. *. (log10 (1. +. hz/.700.))
 
+  (** [mel2hz mel] is the hz value of [mel]. *)
   let mel2hz mel = 700. *. (10. ** (mel/.2595.)-.1.)
 
+  (** [ones acc x] is a list of ones [x] elts long *)
   let rec ones acc x = 
     match x with
     | 1 -> 1::acc
@@ -191,6 +210,8 @@ type audiosignal = {
 
 (* Base.ml - Main Driver functions *)
 
+  (** [init_signal ...] takes the signal and all settings and inits the 
+    * audiosignal record. If setting args aren't given, uses default values. *)
   let init_signal signal ?samplerate:(sr=16000.) ?winlen:(wl=0.025) ?winstep:(ws=0.01)
   ?numcep:(ncep=13) ?nfilt:(nflt=26) ?nfft:(nft=512) ?lowfreq:(lf=0.) 
   ?highfreq:(hf=None) ?preemph:(prmf=0) ?ceplifter:(cpl=22) 
@@ -213,8 +234,7 @@ type audiosignal = {
 
   (** [fbank signal ...] is the list of mel-filterbank energy features from an 
     * audio signal [signal]. [highfreq] is a float opt that either gives the upper
-    * bound of the filters or None indicating its samplerate/2. 
-  *)
+    * bound of the filters or None indicating its samplerate/2. *)
   let fbank audiosignal =
     let highfreq = 
       (match audiosignal.highfreq with 
