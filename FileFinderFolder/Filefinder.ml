@@ -44,10 +44,11 @@ let accesswav_voxforge folder data wav =
 
 module StringD = struct
   type t = string
+  let str s = s ^ ""
   let compare s1 s2 = 
-  let cme = String.compare 
-  (String.lowercase_ascii (s1)) (String.lowercase_ascii (s2)) in 
-  if cme = 0 then `EQ else if cme > 0 then `GT else `LT  
+    let cme = String.compare 
+    (String.lowercase_ascii (s1)) (String.lowercase_ascii (s2)) in 
+    if cme = 0 then `EQ else if cme > 0 then `GT else `LT  
   let format fmt d = print_string d
 end
 
@@ -85,7 +86,7 @@ let find_words cmdlist text audio dataset =
   let filelist = clean_list (list_of_files dataset) [] in
     let f dict file = 
       let promptlist = text dataset file in
-      valid_lines promptlist cmdlist (audio file) dict in 
+      valid_lines promptlist cmdlist (audio dataset file) dict in 
     List.fold_left f D.empty filelist
 
 (** [accesstext_maker datadir textdir] is an access text function maker. Given 
@@ -113,19 +114,19 @@ let accesswav_maker datadir wavdir = fun folder data wav ->
     List.iter f lst
 
   (** [print_value set] prints the elements of a set. *)
-  let print_value set = 
+  let print_value c set = 
     let f k acc = 
-      Printf.printf "%s, " k; acc in
-    print_string "["; S.fold f [] set
+      Printf.fprintf c "        %s, \n" k; acc in
+    S.fold f [] set
 
   (** [print_result dict] prints the assoc_list representation of [dict]. *)
-  let print_result dict = 
+  let print_result channel dict = 
     let f k v acc = 
-      Printf.printf "(%s, " k;
-      let acc = print_value v in
-      print_string "])"; print_newline ();
+      Printf.fprintf channel "\"%s\": [\n" k; 
+      let acc = print_value channel v in
+      Printf.fprintf channel "]\n";
       acc in
-    print_string "["; D.fold f [] dict
+    D.fold f [] dict
 
 (** [getCmdList str acc] is the list representation of the commands found in the
   * string [str], each separated by ';'. [acc] is the list so far. *)
@@ -134,7 +135,7 @@ let rec getCmdList str acc =
     let j = String.index str ';' in
     let str' = (String.sub str (j+1) (String.length str - j-1)) in
     getCmdList (String.trim str') ((String.sub str 0 j)::acc)
-  with Not_found-> print_string "NF - "; print_string str;
+  with Not_found-> (*print_string "NF - "; print_string str;*)
     str::acc
 
 (** [make_cmd_dict word_dict cmd_dict] is the command dictionary (keys: commands
@@ -163,9 +164,11 @@ let main () =
   let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
   let taccess = accesstext_maker args.(3) args.(4) in
   let waccess = accesswav_maker args.(3) args.(5) in
-  let res = find_words cmdlist taccess simpleton dirpath in
+  let res = find_words cmdlist taccess waccess dirpath in
   let cmd_dict = make_cmd_dict res D.empty in
-  print_result res @ print_result cmd_dict
+  let oc = open_out "results.txt" in
+  print_result oc cmd_dict;
+  close_out oc;
   ;;
 
 main ()
