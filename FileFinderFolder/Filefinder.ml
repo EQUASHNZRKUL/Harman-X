@@ -55,6 +55,11 @@ end
 module S = MakeSetOfDictionary (StringD) (MakeTreeDictionary)
 module D = MakeTreeDictionary (StringD) (S)
 
+(** [print_list lst] prints the elements of string list [lst] *)
+  let print_list lst = 
+    let f x = print_string x in
+    List.iter f lst
+
 (** [contains s1 s2] is true if s2 exists in s1 as a substring (case-blind). 
   * (s1 contains s2) == (s1 <~= s2) *)
   let (<~=) s1 s2 = 
@@ -107,11 +112,17 @@ let accesswav_maker datadir wavdir = fun folder data wav ->
   let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
   String.concat "" [des; ".wav"]
 
+let accesstext_libri folder data = 
+  let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
+  read_file dest
+
+let accessflac_libri folder data wav = (String.concat "/" [folder; data; wav]) ^ ".flac"
+
+let accesstext_surf folder data = 
+  let dest = folder ^ "/text/text.txt" in
+  read_file dest
+
 (* Print Functions *)
-  (** [print_list lst] prints the elements of string list [lst] *)
-  let print_list lst = 
-    let f x = print_string x in
-    List.iter f lst
 
   (** [print_value set] prints the elements of a set. *)
   let print_value c set = 
@@ -138,6 +149,20 @@ let rec getCmdList str acc =
   with Not_found-> (*print_string "NF - "; print_string str;*)
     str::acc
 
+(* flattens the directory *)
+let flatten ds = 
+  let outerlist = clean_list (list_of_files ds) [] in
+  let f book = 
+    let innerlist = clean_list (list_of_files (ds ^ "/" ^ book)) [] in
+    let g user = 
+      Sys.command ((
+      "mv /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500/" 
+      ^ book ^ "/" ^ user) ^ 
+      (" /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeechFlat/" 
+      ^ book ^ "-" ^ user)) in
+    List.map g innerlist in
+  List.map f outerlist
+
 (** [make_cmd_dict word_dict cmd_dict] is the command dictionary (keys: commands
   * values: sets of wavids) made from the wav dictionary [word_dict] (keys: wavs
   * values: sets of commands) where cmd_dict acts like an accumulator. *)
@@ -158,17 +183,22 @@ let rec make_cmd_dict word_dict cmd_dict =
     
 
 let main () = 
-  let simpleton = fun x y -> y in
+  let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
   let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
-  let taccess = accesstext_maker args.(3) args.(4) in
-  let waccess = accesswav_maker args.(3) args.(5) in
-  let res = find_words cmdlist taccess waccess dirpath in
+  let res,txtout = (match argv.(6) with 
+  | "vox" -> (let taccess = accesstext_maker args.(3) args.(4) in
+    let waccess = accesswav_maker args.(3) args.(5) in
+    find_words cmdlist taccess waccess dirpath, "vox_results.txt")
+  | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath, "libri_results.txt")
+  | "surf" -> (find_words cmdlist accesstext_surf simpleton dirpath, "surf_results.txt")
+  | _ -> D.empty,"") in
   let cmd_dict = make_cmd_dict res D.empty in
-  let oc = open_out "results.txt" in
+  let oc = open_out txtout in
   print_result oc cmd_dict;
   close_out oc;
+  (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
   ;;
 
 main ()

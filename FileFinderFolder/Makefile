@@ -25,5 +25,20 @@ exec:
 eval:
 # ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
 	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
-	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData" "" "etc/prompts-original" "wav"
+	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData/VoxForge" "" "etc/prompts-original" "wav"
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
+
+libri:
+	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
+	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData/LibriSpeechFlat" "" "" "" "libri"
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
+
+vox:
+	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
+	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData/VoxForge" "" "etc/prompts-original" "wav" "vox" 
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
+
+surf: 
+	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
+	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData/SurfFolder" "" "" "" "surf" 
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder

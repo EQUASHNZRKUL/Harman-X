@@ -1,0 +1,10 @@
+LibriSpeech:
+    ./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData/LibriSpeechFlat" "" "" ""
+    let res = find_words cmdlist accesstext_libri accessflac_libri dirpath in
+
+VoxForge:
+    ./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "./FileFinderData/VoxForge" "" "etc/prompts-original" "wav"
+    let res = find_words cmdlist taccess waccess dirpath in
+
+TIMIT:
+    
