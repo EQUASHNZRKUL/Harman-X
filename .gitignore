@@ -3,7 +3,7 @@ FileFinderData/Anniepoo-20140308-bft/wav/rb-04.wav
 Filefinder.cmi
 Filefinder.cmx
 Filefinder.o
-FileFinderData/*
+FileFinderData/
 FileFinderData/1028-20100710-hne/LICENSE
 FileFinderData/1028-20100710-hne/etc/GPL_license.txt
 FileFinderData/1028-20100710-hne/etc/HDMan_log
