@@ -4,6 +4,7 @@ Filefinder.cmi
 Filefinder.cmx
 Filefinder.o
 results/
+ResultSheet.xls
 FileFinderData/
 FileFinderData/1028-20100710-hne/LICENSE
 FileFinderData/1028-20100710-hne/etc/GPL_license.txt
