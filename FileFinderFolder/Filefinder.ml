@@ -94,33 +94,53 @@ let find_words cmdlist text audio dataset =
       valid_lines promptlist cmdlist (audio dataset file) dict in 
     List.fold_left f D.empty filelist
 
-(** [accesstext_maker datadir textdir] is an access text function maker. Given 
-  * the path from the dataset folder to the data folder [datdir] and the path 
-  * from the data folder to the text transcript file [textdir] such that they 
-  * fulfill foldername/[datdir]/data/[textdir]. The resulting function returns
-  * the text location for a given [folder] and [data].*)
-  let accesstext_maker datadir textdir = fun folder data -> 
-  let dest = String.concat "/" [folder; datadir; data; textdir] in
-  read_file dest
+(** ACCESS FUNCTIONS **)
 
-(** [accesswav_maker datadir wavdir] is an access wav function maker. Given
-  * the path from the dataset folder to the data folder [datdir] and the path
-  * from the data folder to the wav audio file [wavdir] such that they 
-  * fulfill foldername/[datdir]/data/[wavdir]/wav.wav. The resulting function returns
-  * the text location for a given [folder], [data], [wav].*)
-let accesswav_maker datadir wavdir = fun folder data wav -> 
-  let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
-  String.concat "" [des; ".wav"]
+  (** [accesstext_maker datadir textdir] is an access text function maker. Given 
+    * the path from the dataset folder to the data folder [datdir] and the path 
+    * from the data folder to the text transcript file [textdir] such that they 
+    * fulfill foldername/[datdir]/data/[textdir]. The resulting function returns
+    * the text location for a given [folder] and [data].*)
+    let accesstext_maker datadir textdir = fun folder data -> 
+    let dest = String.concat "/" [folder; datadir; data; textdir] in
+    read_file dest
 
-let accesstext_libri folder data = 
-  let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
-  read_file dest
+  (** [accesswav_maker datadir wavdir] is an access wav function maker. Given
+    * the path from the dataset folder to the data folder [datdir] and the path
+    * from the data folder to the wav audio file [wavdir] such that they 
+    * fulfill foldername/[datdir]/data/[wavdir]/wav.wav. The resulting function returns
+    * the text location for a given [folder], [data], [wav].*)
+  let accesswav_maker datadir wavdir = fun folder data wav -> 
+    let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
+    String.concat "" [des; ".wav"]
 
-let accessflac_libri folder data wav = (String.concat "/" [folder; data; wav]) ^ ".flac"
+  let accesstext_vox folder data = 
+    let predes = folder ^ "/" ^ data in
+    let des = predes ^ "/etc/prompts-original" in
+    try
+      read_file des
+    with Sys_error x -> 
+      try 
+        let des = predes ^ "/etc/PROMPTS" in
+        read_file des
+      with Sys_error x ->
+        let des = predes ^ "/etc/Transcriptions.txt" in
+        read_file des
 
-let accesstext_surf folder data = 
-  let dest = folder ^ "/text/text.txt" in
-  read_file dest
+
+  let accesstext_libri folder data = 
+    let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
+    read_file dest
+
+  let accessflac_libri folder data wav = (String.concat "/" [folder; data; wav]) ^ ".flac"
+
+  let accesstext_surf folder data = 
+    let dest = folder ^ "/text/text.txt" in
+    read_file dest
+
+  let accesstext_vy folder data = 
+    let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".wav.trn" in
+    read_file dest
 
 (* Print Functions *)
 
@@ -163,6 +183,18 @@ let flatten ds =
     List.map g innerlist in
   List.map f outerlist
 
+let unflatten ds = 
+  let file_list = clean_list (list_of_files ds) [] in
+  let f s = 
+    let len = String.length s in
+    let suff = String.sub s (len-4) 4 in
+    let dest = if suff = ".trn" then String.sub s 0 (len-8) else String.sub s 0 (len-4) in
+    let i = Sys.command ("mkdir /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/vystidial/" ^ dest) in
+    let cmd = "mv " ^ ds ^ "/" ^ s ^ " /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/vystidial/" 
+              ^ dest ^ "/" ^ s in
+    Sys.command cmd in
+  List.map f file_list
+
 (** [make_cmd_dict word_dict cmd_dict] is the command dictionary (keys: commands
   * values: sets of wavids) made from the wav dictionary [word_dict] (keys: wavs
   * values: sets of commands) where cmd_dict acts like an accumulator. *)
@@ -187,18 +219,21 @@ let main () =
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
   let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
+  (* let taccess = accesstext_maker args.(3) args.(4) in *)
+  let waccess = accesswav_maker args.(3) args.(5) in
   let res,txtout = (match argv.(6) with 
-  | "vox" -> (let taccess = accesstext_maker args.(3) args.(4) in
-    let waccess = accesswav_maker args.(3) args.(5) in
-    find_words cmdlist taccess waccess dirpath, "vox_results.txt")
+  | "vox" -> (
+    find_words cmdlist accesstext_vox waccess dirpath, "vox_results.txt")
   | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath, "libri_results.txt")
   | "surf" -> (find_words cmdlist accesstext_surf simpleton dirpath, "surf_results.txt")
+  | "vy" -> (find_words cmdlist accesstext_vy simpleton dirpath, "vy_results.txt")
   | _ -> D.empty,"") in
   let cmd_dict = make_cmd_dict res D.empty in
-  let oc = open_out txtout in
+  let oc = open_out ("results/" ^ txtout) in
   print_result oc cmd_dict;
   close_out oc;
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
+  (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/vystidial/train/" *)
   ;;
 
 main ()
