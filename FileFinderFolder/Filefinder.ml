@@ -75,6 +75,7 @@ module D = MakeTreeDictionary (StringD) (S)
   * put into a dict as a value with the corresponding wavid as the key *)
 let rec valid_lines prompt_list cmdlist audiofile dict = 
   let f dict prompt = 
+    print_string prompt; print_newline (); (* TEST: prints each file*)
     let g set c = if prompt <~= c then S.insert c set else set in
     let v = List.fold_left g S.empty cmdlist in
     if v != S.empty then
@@ -87,12 +88,11 @@ let rec valid_lines prompt_list cmdlist audiofile dict =
   * of data points in dataset [foldername] with prompt access_function of [text]
   * and wav location access_function of [audio] that contain an instance of any 
   * word found in [cmdlist]. *)
-let find_words cmdlist text audio dataset = 
-  let filelist = clean_list (list_of_files dataset) [] in
-    let f dict file = 
-      let promptlist = text dataset file in
-      valid_lines promptlist cmdlist (audio dataset file) dict in 
-    List.fold_left f D.empty filelist
+let find_words cmdlist text audio dataset prefix = 
+  let f dict file = if file = ".DS_Store" then dict else
+    let promptlist = text dataset file in
+    valid_lines promptlist cmdlist (audio dataset file) dict in 
+  List.fold_left f D.empty (list_of_files dataset)
 
 (** ACCESS FUNCTIONS **)
 
@@ -114,19 +114,22 @@ let find_words cmdlist text audio dataset =
     let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
     String.concat "" [des; ".wav"]
 
-  let accesstext_vox folder data = 
-    let predes = folder ^ "/" ^ data in
-    let des = predes ^ "/etc/prompts-original" in
-    try
-      read_file des
-    with Sys_error x -> 
-      try 
-        let des = predes ^ "/etc/PROMPTS" in
-        read_file des
-      with Sys_error x ->
-        let des = predes ^ "/etc/Transcriptions.txt" in
-        read_file des
+  let rec try_vox predes lst = 
+    match lst with 
+    | [] -> raise (Sys_error "out of options in lst")
+    | e::[] -> read_file (predes ^ e)
+    | h::t -> 
+      try
+        read_file (predes ^ h)
+      with Sys_error x -> 
+        try_vox predes t
 
+  let accesstext_vox folder data = 
+    let predes = folder ^ "/" ^ data ^ "/etc/" in
+    let des = predes ^ "/etc/prompts-original" in
+    let l = ["prompts-original"; "PROMPTS"; "prompt.txt"; "Transcriptions.txt";
+            "prompts.txt"] in
+    try_vox predes l 
 
   let accesstext_libri folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
@@ -137,6 +140,9 @@ let find_words cmdlist text audio dataset =
   let accesstext_surf folder data = 
     let dest = folder ^ "/text/text.txt" in
     read_file dest
+
+  let accesswav_surf folder data wav = 
+    String.concat "/" [folder; data; wav]
 
   let accesstext_vy folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".wav.trn" in
@@ -184,13 +190,13 @@ let flatten ds =
   List.map f outerlist
 
 let unflatten ds = 
-  let file_list = clean_list (list_of_files ds) [] in
-  let f s = 
+  let file_list = list_of_files ds in
+  let f s = if s = ".DS_Store" then Sys.command "cd ." else
     let len = String.length s in
     let suff = String.sub s (len-4) 4 in
     let dest = if suff = ".trn" then String.sub s 0 (len-8) else String.sub s 0 (len-4) in
-    let i = Sys.command ("mkdir /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/vystidial/" ^ dest) in
-    let cmd = "mv " ^ ds ^ "/" ^ s ^ " /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/vystidial/" 
+    let i = Sys.command ("mkdir /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/" ^ dest) in
+    let cmd = "mv " ^ ds ^ "/" ^ s ^ " /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/" 
               ^ dest ^ "/" ^ s in
     Sys.command cmd in
   List.map f file_list
@@ -222,18 +228,17 @@ let main () =
   (* let taccess = accesstext_maker args.(3) args.(4) in *)
   let waccess = accesswav_maker args.(3) args.(5) in
   let res,txtout = (match argv.(6) with 
-  | "vox" -> (
-    find_words cmdlist accesstext_vox waccess dirpath, "vox_results.txt")
-  | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath, "libri_results.txt")
-  | "surf" -> (find_words cmdlist accesstext_surf simpleton dirpath, "surf_results.txt")
-  | "vy" -> (find_words cmdlist accesstext_vy simpleton dirpath, "vy_results.txt")
-  | _ -> D.empty,"") in
+    | "vox" -> (find_words cmdlist accesstext_vox waccess dirpath true, "vox_results.txt")
+    | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath true, "libri_results.txt")
+    | "surf" -> (find_words cmdlist accesstext_surf accesswav_surf dirpath true, "surf_results.txt")
+    | "vy" -> (find_words cmdlist accesstext_vy simpleton dirpath false, "vy_results.txt")
+    | _ -> D.empty,"") in
   let cmd_dict = make_cmd_dict res D.empty in
   let oc = open_out ("results/" ^ txtout) in
   print_result oc cmd_dict;
   close_out oc;
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
-  (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/vystidial/train/" *)
+  (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
   ;;
 
 main ()
