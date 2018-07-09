@@ -52,8 +52,23 @@ module StringD = struct
   let format fmt d = print_string d
 end
 
+type lineinfo = {id : string; starttime : float; endtime : float}
+
+module AMID = struct 
+  type t = lineinfo 
+  let str i = "{id = " ^ i.id ^ "; starttime = " ^ (string_of_float i.starttime)
+    ^ "; endtime = " ^ (string_of_float i.endtime) ^ "}" 
+  let compare i1 i2 = 
+    if i1.starttime < i2.starttime then `LT else if i1.starttime = i2.starttime 
+    then `EQ else `GT
+  let format fmt i = print_string (str i)
+end
+
 module S = MakeSetOfDictionary (StringD) (MakeTreeDictionary)
 module D = MakeTreeDictionary (StringD) (S)
+
+module Sami = MakeSetOfDictionary (AMID) (MakeTreeDictionary)
+module Dami = MakeTreeDictionary (StringD) (Sami)
 
 (** [print_list lst] prints the elements of string list [lst] *)
   let print_list lst = 
@@ -161,6 +176,11 @@ let find_words cmdlist text audio dataset prefix =
       Printf.fprintf c "        %s, \n" k; acc in
     S.fold f [] set
 
+  let print_value_ami c set = 
+    let f k acc = 
+      Printf.fprintf c "        %s, \n" (AMID.str k); acc in
+    Sami.fold f [] set
+
   (** [print_result dict] prints the assoc_list representation of [dict]. *)
   let print_result channel dict = 
     let f k v acc = 
@@ -169,6 +189,14 @@ let find_words cmdlist text audio dataset prefix =
       Printf.fprintf channel "]\n";
       acc in
     D.fold f [] dict
+
+  let print_result_ami channel ami = 
+    let f k v acc = 
+      Printf.fprintf channel "\"%s\": [\n" k; 
+      let acc = print_value_ami channel v in
+      Printf.fprintf channel "]\n";
+      acc in
+    Dami.fold f [] ami
 
 (** [getCmdList str acc] is the list representation of the commands found in the
   * string [str], each separated by ';'. [acc] is the list so far. *)
@@ -224,6 +252,39 @@ let rec make_cmd_dict word_dict cmd_dict =
     let word_dict' = D.remove wav word_dict in
     make_cmd_dict word_dict' cmd_dict'
 
+let get_info line = 
+  let ids = String.index line '=' in
+  let idf = String.index_from line (ids+2) '"' in
+  let id' = String.sub line (ids+2) (idf-ids-2) in
+  let starts = String.index_from line idf '=' in
+  let startf = String.index_from line (starts+2) '"' in
+  let start' = float_of_string (String.sub line (starts+2) (startf - starts - 2)) in
+  let ends = String.index_from line startf '=' in
+  let endf = String.index_from line (ends+2) '"' in
+  let end' = float_of_string (String.sub line (ends+2) (endf - ends - 2)) in
+  let vals = String.index line '>' in
+  let valf = String.index_from line vals '<' in
+  let val' = String.sub line (vals+1) (valf - vals - 1) in
+  {id = id'; starttime = start'; endtime = end'}, val'
+
+let ami_dict dir cmd_list = 
+  let files = clean_list (list_of_files dir) [] in
+  let clst line acc word = ((line <~= "/w>") && (line <~= word)) || acc in
+  let f dictacc file = 
+    let lines = read_file (dir ^ "/" ^ file) in
+    let g dict line = 
+      print_endline (line);
+      let contains = List.fold_left (clst line) false cmd_list in
+      if contains then 
+        let info,k = get_info line in
+        let valopt = Dami.find k dict in
+        let set = (match valopt with | None -> Sami.empty | Some x -> x) in
+        print_endline ("contained");
+        Dami.insert k (Sami.insert info set) dict 
+      else dict in
+    List.fold_left g dictacc lines in
+  List.fold_left f Dami.empty files
+
 let main () = 
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
@@ -236,10 +297,13 @@ let main () =
     | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath true, "libri_results.txt")
     | "surf" -> (find_words cmdlist accesstext_surf accesswav_surf dirpath true, "surf_results.txt")
     | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, "vy_results.txt")
+    | "ami" -> (D.empty, "ami_results.txt")
     | _ -> D.empty,"") in
   let cmd_dict = make_cmd_dict res D.empty in
   let oc = open_out ("results/" ^ txtout) in
-  ignore (print_result oc cmd_dict);
+  if argv.(6) = "ami" then 
+    ignore(print_result_ami oc (ami_dict dirpath cmdlist))
+  else ignore (print_result oc cmd_dict);
   close_out oc;
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
