@@ -128,7 +128,7 @@ let find_words cmdlist text audio dataset prefix =
 
   let accesstext_vox folder data = 
     let predes = folder ^ "/" ^ data ^ "/etc/" in
-    let des = predes ^ "/etc/prompts-original" in
+    (* let des = predes ^ "/etc/prompts-original" in *)
     let l = ["prompts-original"; "PROMPTS"; "prompt.txt"; "Transcriptions.txt";
             "prompts.txt"] in
     try_vox predes l 
@@ -149,6 +149,9 @@ let find_words cmdlist text audio dataset prefix =
   let accesstext_vy folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".wav.trn" in
     read_file dest
+
+  let accesswav_vy folder data wav = 
+    String.concat "/" [folder; data]
 
 (* Print Functions *)
 
@@ -197,7 +200,7 @@ let unflatten ds =
     let len = String.length s in
     let suff = String.sub s (len-4) 4 in
     let dest = if suff = ".trn" then String.sub s 0 (len-8) else String.sub s 0 (len-4) in
-    let i = Sys.command ("mkdir /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/" ^ dest) in
+    (* let i = Sys.command ("mkdir /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/" ^ dest) in *)
     let cmd = "mv " ^ ds ^ "/" ^ s ^ " /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/" 
               ^ dest ^ "/" ^ s in
     Sys.command cmd in
@@ -220,7 +223,6 @@ let rec make_cmd_dict word_dict cmd_dict =
     let cmd_dict' = S.fold f cmd_dict cmd_set in
     let word_dict' = D.remove wav word_dict in
     make_cmd_dict word_dict' cmd_dict'
-    
 
 let main () = 
   let simpleton = fun x y z -> x in
@@ -233,11 +235,11 @@ let main () =
     | "vox" -> (find_words cmdlist accesstext_vox waccess dirpath true, "vox_results.txt")
     | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath true, "libri_results.txt")
     | "surf" -> (find_words cmdlist accesstext_surf accesswav_surf dirpath true, "surf_results.txt")
-    | "vy" -> (find_words cmdlist accesstext_vy simpleton dirpath false, "vy_results.txt")
+    | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, "vy_results.txt")
     | _ -> D.empty,"") in
   let cmd_dict = make_cmd_dict res D.empty in
   let oc = open_out ("results/" ^ txtout) in
-  print_result oc cmd_dict;
+  ignore (print_result oc cmd_dict);
   close_out oc;
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
