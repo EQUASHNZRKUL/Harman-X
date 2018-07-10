@@ -5,6 +5,7 @@ from python_speech_features import logfbank
 from numpy import savez 
 
 import scipy.io.wavfile as wav
+import soundfile as sf
 
 def read_res(filename, d={}):
     resfile = open(filename, 'r')
@@ -21,7 +22,12 @@ def read_res(filename, d={}):
     return d
 
 def get_mfcc(wavfile):
-    (rate, sig) = wav.read (wavfile)
+    try: 
+        (sig, rate) = sf.read(wavfile)
+    except RuntimeError:
+        i = wavfile.find("/wav/")
+        wavfile = wavfile[:i] + "/flac/" + wavfile[i+5:-4] + ".flac"
+        (sig, rate) = sf.read(wavfile)
     mfcc_feat = mfcc(sig,rate)
     d_mfcc_feat = delta(mfcc_feat, 2)
     fbank_feat = logfbank(sig,rate)
@@ -33,6 +39,7 @@ def write_dict(d):
 
 def main():
     dic = {}
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
