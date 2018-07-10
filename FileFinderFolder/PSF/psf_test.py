@@ -34,6 +34,8 @@ def write_dict(d):
 def main():
     dic = {}
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
     write_dict(dic)
 
 if __name__ == "__main__":

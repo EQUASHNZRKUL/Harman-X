@@ -118,7 +118,7 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
       let i = String.rindex wav '/' in
       String.sub wav i (String.length wav - i)
     with Not_found -> wav in
-    predes ^ wav'
+    predes ^ wav'^ ".wav"
 
   let accesstext_libri folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
@@ -260,6 +260,7 @@ let find_words cmdlist text audio dataset prefix =
     valid_lines promptlist cmdlist (audio dataset file) dict prefix in 
   List.fold_left f D.empty (list_of_files dataset)
 
+(** [get_info line] is the record extracting the information from an AMI line. *)
 let get_info line = 
   let ids = String.index line '=' in
   let idf = String.index_from line (ids+2) '"' in
@@ -275,6 +276,8 @@ let get_info line =
   let val' = String.sub line (vals+1) (valf - vals - 1) in
   {id = id'; starttime = start'; endtime = end'}, val'
 
+(** [ami_dict dir cmd_list] is the ami dictionary. Similar output to find_words
+  * but with sets of records as values rather than sets of strings. *)
 let ami_dict dir cmd_list = 
   let files = clean_list (list_of_files dir) [] in
   let clst line acc word = ((line <~= "/w>") && (line <~= word)) || acc in
