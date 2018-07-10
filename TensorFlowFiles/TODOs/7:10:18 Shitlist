@@ -9,5 +9,6 @@ TODO 7/10/17
  - WRITE combine all dict functions 
  √ FIX Vox output to not include mfc folder
  - WRITE specs for Filefinder.ml
- - FIX Vy output for PFC
- - WRITE AMI function for PFC
+ - FIX Vy output for PSF
+ - WRITE AMI function for PSF
+ - WRITE Specs for PSF
