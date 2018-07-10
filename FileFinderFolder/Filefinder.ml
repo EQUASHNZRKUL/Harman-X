@@ -291,14 +291,15 @@ let surf_dict dir cmd_list =
   let line_f dict line = 
     let valcmds = List.filter (fun c -> line <~= c) cmd_list in
     if valcmds != [] then 
-    let i = String.index line ' ' in
-    let wav = String.sub line 0 i in
+    let i = String.index line '.' in
+    let wav = "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/SurfFolder/SurfData/" ^ (String.sub line 0 (i+4)) in
     let cmd_f dict cmd = 
       let valopt = D.find cmd dict in
       let s = (match valopt with 
       | None -> S.empty
       | Some v -> v) in
       let v' = S.insert wav s in
+      print_endline cmd;
       D.insert cmd v' dict in
     List.fold_left cmd_f dict valcmds
     else dict in
@@ -314,7 +315,7 @@ let main () =
   let res,txtout = (match argv.(6) with 
     | "vox" -> (find_words cmdlist accesstext_vox waccess dirpath true, "vox_results.txt")
     | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath true, "libri_results.txt")
-    | "surf" -> (find_words cmdlist accesstext_surf accesswav_surf dirpath true, "surf_results.txt")
+    | "surf" -> (surf_dict dirpath cmdlist, "surf_results.txt")
     | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, "vy_results.txt")
     | "ami" -> (D.empty, "ami_results.txt")
     | _ -> D.empty,"") in
@@ -322,6 +323,8 @@ let main () =
   let oc = open_out ("results/" ^ txtout) in
   if argv.(6) = "ami" then 
     ignore(print_result_ami oc (ami_dict dirpath cmdlist))
+  else if argv.(6) = "surf" then
+    ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
   close_out oc;
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
