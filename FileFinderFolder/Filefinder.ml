@@ -215,7 +215,7 @@ let flatten ds =
     let innerlist = clean_list (list_of_files (ds ^ "/" ^ book)) [] in
     let g user = 
       Sys.command ((
-      "mv /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500/" 
+      "mv /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360/" 
       ^ book ^ "/" ^ user) ^ 
       (" /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeechFlat/" 
       ^ book ^ "-" ^ user)) in
@@ -327,7 +327,7 @@ let main () =
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
   close_out oc;
-  (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_500/train-other-500" *)
+  (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
   ;;
 
