@@ -7,4 +7,5 @@ TODO 7/10/17
  √ MOVE PSF to FileFinderFolder once tested
  * Convert .npz files
  - WRITE combine all dict functions 
+ √ FIX Vox output to not include mfc folder
  - WRITE specs for Filefinder.ml
