@@ -75,42 +75,6 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
     let f x = print_string x in
     List.iter f lst
 
-(** [contains s1 s2] is true if s2 exists in s1 as a substring (case-blind). 
-  * (s1 contains s2) == (s1 <~= s2) *)
-  let (<~=) s1 s2 = 
-  let s1 = String.lowercase_ascii s1 in
-  let s2 = String.lowercase_ascii s2 in
-  let re = Str.regexp_string s2 in
-  try ignore (Str.search_forward re s1 0); true
-  with Not_found -> false
-
-(** [valid_lines] returns the valid wave file names from the [prompt_list] which
-  * is the list of prompts, each element corresponding to a separate 5 sec wav
-  * recording, that contain a word from [cmdlist]. If they do exist, they are
-  * put into a dict as a value with the corresponding wavid as the key *)
-let rec valid_lines prompt_list cmdlist audiofile dict prefix = 
-  let f dict prompt = 
-    (* print_string prompt; print_newline (); TEST: prints each file *)
-    let g set c = if prompt <~= c then S.insert c set else set in
-    let v = List.fold_left g S.empty cmdlist in
-    if v != S.empty then
-      let k = if prefix then 
-      String.index prompt ' ' |> String.sub prompt 0 |> audiofile 
-      else audiofile prompt in
-      D.insert k v dict
-    else dict in
-  List.fold_left f dict prompt_list
-
-(** [find_words cmdlist text audio foldername] is the (wav * prompt) list 
-  * of data points in dataset [foldername] with prompt access_function of [text]
-  * and wav location access_function of [audio] that contain an instance of any 
-  * word found in [cmdlist]. *)
-let find_words cmdlist text audio dataset prefix = 
-  let f dict file = if file = ".DS_Store" then dict else
-    let promptlist = text dataset file in
-    valid_lines promptlist cmdlist (audio dataset file) dict prefix in 
-  List.fold_left f D.empty (list_of_files dataset)
-
 (** ACCESS FUNCTIONS **)
 
   (** [accesstext_maker datadir textdir] is an access text function maker. Given 
@@ -149,10 +113,11 @@ let find_words cmdlist text audio dataset prefix =
     try_vox predes l 
 
   let accesswav_vox folder data wav = 
-    let predes = folder ^ "/" ^ data ^ "/etc/" in
-    let wav' = 
+    let predes = folder ^ "/" ^ data ^ "/wav/" in
+    let wav' = try 
       let i = String.rindex wav '/' in
-      String.sub wav i (String.length wav - i) in
+      String.sub wav i (String.length wav - i)
+    with Not_found -> wav in
     predes ^ wav'
 
   let accesstext_libri folder data = 
@@ -258,6 +223,42 @@ let rec make_cmd_dict word_dict cmd_dict =
     let cmd_dict' = S.fold f cmd_dict cmd_set in
     let word_dict' = D.remove wav word_dict in
     make_cmd_dict word_dict' cmd_dict'
+
+(** [contains s1 s2] is true if s2 exists in s1 as a substring (case-blind). 
+  * (s1 contains s2) == (s1 <~= s2) *)
+  let (<~=) s1 s2 = 
+  let s1 = String.lowercase_ascii s1 in
+  let s2 = String.lowercase_ascii s2 in
+  let re = Str.regexp_string s2 in
+  try ignore (Str.search_forward re s1 0); true
+  with Not_found -> false
+
+(** [valid_lines] returns the valid wave file names from the [prompt_list] which
+  * is the list of prompts, each element corresponding to a separate 5 sec wav
+  * recording, that contain a word from [cmdlist]. If they do exist, they are
+  * put into a dict as a value with the corresponding wavid as the key *)
+let rec valid_lines prompt_list cmdlist audiofile dict prefix = 
+  let f dict prompt = 
+    (* print_endline prompt (*TEST: prints each file*) ; *)
+    let g set c = if prompt <~= c then S.insert c set else set in
+    let v = List.fold_left g S.empty cmdlist in
+    if v != S.empty then
+      let k = if prefix then 
+      String.index prompt ' ' |> String.sub prompt 0 |> audiofile 
+      else audiofile prompt in
+      D.insert k v dict
+    else dict in
+  List.fold_left f dict prompt_list
+
+(** [find_words cmdlist text audio foldername] is the (wav * prompt) list 
+  * of data points in dataset [foldername] with prompt access_function of [text]
+  * and wav location access_function of [audio] that contain an instance of any 
+  * word found in [cmdlist]. *)
+let find_words cmdlist text audio dataset prefix = 
+  let f dict file = if file = ".DS_Store" then dict else
+    let promptlist = text dataset file in
+    valid_lines promptlist cmdlist (audio dataset file) dict prefix in 
+  List.fold_left f D.empty (list_of_files dataset)
 
 let get_info line = 
   let ids = String.index line '=' in
