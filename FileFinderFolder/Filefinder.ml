@@ -148,6 +148,13 @@ let find_words cmdlist text audio dataset prefix =
             "prompts.txt"] in
     try_vox predes l 
 
+  let accesswav_vox folder data wav = 
+    let predes = folder ^ "/" ^ data ^ "/etc/" in
+    let wav' = 
+      let i = String.rindex wav '/' in
+      String.sub wav i (String.length wav - i) in
+    predes ^ wav'
+
   let accesstext_libri folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
     read_file dest
@@ -313,7 +320,7 @@ let main () =
   (* let taccess = accesstext_maker args.(3) args.(4) in *)
   let waccess = accesswav_maker args.(3) args.(5) in
   let res,txtout = (match argv.(6) with 
-    | "vox" -> (find_words cmdlist accesstext_vox waccess dirpath true, "vox_results.txt")
+    | "vox" -> (find_words cmdlist accesstext_vox accesswav_vox dirpath true, "vox_results.txt")
     | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath true, "libri_results.txt")
     | "surf" -> (surf_dict dirpath cmdlist, "surf_results.txt")
     | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, "vy_results.txt")
