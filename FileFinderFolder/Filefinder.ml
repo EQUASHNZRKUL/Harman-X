@@ -285,6 +285,13 @@ let ami_dict dir cmd_list =
     List.fold_left g dictacc lines in
   List.fold_left f Dami.empty files
 
+let surf_dict dir cmd_list = 
+  let des = dir ^ "/text/text.txt" in
+  let lines = read_file des in
+  let g dict line = 
+    if List.filter (fun c -> line <~= c) cmd_list = [] then 
+
+
 let main () = 
   let simpleton = fun x y z -> x in
   let args = Sys.argv in

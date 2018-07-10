@@ -1,0 +1,7 @@
+TODO 7/10/17
+
+ - WRITE surf_dict 
+ - TEST surf_dict
+ - TEST output of the rest of the functions
+ - WRITE PSF_all
+ - MOVE PSF to FileFinderFolder once tested
