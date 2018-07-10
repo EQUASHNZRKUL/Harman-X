@@ -288,9 +288,21 @@ let ami_dict dir cmd_list =
 let surf_dict dir cmd_list = 
   let des = dir ^ "/text/text.txt" in
   let lines = read_file des in
-  let g dict line = 
-    if List.filter (fun c -> line <~= c) cmd_list = [] then 
-
+  let line_f dict line = 
+    let valcmds = List.filter (fun c -> line <~= c) cmd_list in
+    if valcmds != [] then 
+    let i = String.index line ' ' in
+    let wav = String.sub line 0 i in
+    let cmd_f dict cmd = 
+      let valopt = D.find cmd dict in
+      let s = (match valopt with 
+      | None -> S.empty
+      | Some v -> v) in
+      let v' = S.insert wav s in
+      D.insert cmd v' dict in
+    List.fold_left cmd_f dict valcmds
+    else dict in
+  List.fold_left line_f D.empty lines
 
 let main () = 
   let simpleton = fun x y z -> x in
