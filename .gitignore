@@ -3,7 +3,8 @@ FileFinderData/Anniepoo-20140308-bft/wav/rb-04.wav
 Filefinder.cmi
 Filefinder.cmx
 Filefinder.o
-PSF/data/
+FileFinderFolder/PSF/data/
+FileFinderFolder/PSF/MFCCData/
 results/
 ResultSheet.xlsx
 FileFinderData/
