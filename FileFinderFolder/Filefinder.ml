@@ -138,7 +138,7 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
     read_file dest
 
   let accesswav_vy folder data wav = 
-    String.concat "/" [folder; data]
+    String.concat "/" [folder; data; data] ^ ".wav"
 
 (* Print Functions *)
 
