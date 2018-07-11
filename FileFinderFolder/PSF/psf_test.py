@@ -7,10 +7,29 @@ from numpy import savez
 import scipy.io.wavfile as wav
 import soundfile as sf
 
+def get_info(infostr):
+    i1 = infostr.find("id = ")
+    i2 = infostr.find("starttime = ")
+    i3 = infostr.find("endtime = ")
+    id = infostr[i1+5:i2-2]
+    st = float(infostr[i2+12:i3-2])
+    et = float(infostr[i3+10:-3])
+    return (id, st, et)
+
 def read_ami(filename, d={}):
     resfile = open(filename, 'r')
     key = None
     for line in resfile:
+        if "[" in line : 
+            key = line[1:-5]
+            d[key] = []
+        if (not "[" in line) and (not "]" in line):
+            info = get_info(line)
+            id = info[0]
+            s1 = id.find('.')
+            id = id[:s1]
+            dir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI/data/" + 
+                 id + "/audio/" + id 
 
 def read_res(filename, d={}):
     resfile = open(filename, 'r')
