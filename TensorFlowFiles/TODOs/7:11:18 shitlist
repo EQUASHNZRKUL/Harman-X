@@ -1,0 +1,9 @@
+TODO 7/11/18
+
+ - TEST output of the rest of the functions
+ * Convert .npz files
+ - WRITE combine all dict functions 
+ - WRITE specs for Filefinder.ml
+ - FIX Vy output for PSF
+ - WRITE AMI function for PSF
+ - WRITE Specs for PSF

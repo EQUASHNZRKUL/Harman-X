@@ -7,6 +7,11 @@ from numpy import savez
 import scipy.io.wavfile as wav
 import soundfile as sf
 
+def read_ami(filename, d={}):
+    resfile = open(filename, 'r')
+    key = None
+    for line in resfile:
+
 def read_res(filename, d={}):
     resfile = open(filename, 'r')
     key = None
