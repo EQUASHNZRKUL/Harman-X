@@ -383,6 +383,17 @@ let wsj0_unbox dir = (*wsj0*)
     List.map data_f data_list in
   List.map folder_f folder_list
 
+let txtify dir = 
+  let point_list = clean_list (list_of_files dir) [] in
+  let folder_f point = 
+    let file_list = clean_list (list_of_files dir) [] in
+    let rename file = 
+      let l = String.length file in
+      if (String.sub file (l-4) 4) = ".dot" then 
+        ignore(Sys.command ("mv " ^ file ^ " " ^ (String.sub file 0 (l-4)) ^ ".txt")) in
+    List.iter rename file_list in
+  List.iter folder_f point_list
+
   (* let group dir = 
     let res_list = list_of_files' (dir ^ "/results/") in 
     let ds_list = list_of_files' (dir ^ "/FileFinderData") in
