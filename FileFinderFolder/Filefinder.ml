@@ -368,6 +368,21 @@ let surf_dict dir cmd_list =
     else dict in
   List.fold_left line_f D.empty lines
 
+(** [wsj0_unbox dir] distributes the files found in wsj0 into a data folder,
+  * ready to be processed by [find_words]. *)
+let wsj0_unbox dir = (*wsj0*)
+  let folder_list = list_of_files dir in
+  let folder_f folder = (*sd_dt_05*)
+    let data_list = list_of_files (dir ^ "/" ^ folder) in 
+    let data_f data = (*00a*)
+      let src = String.concat "/" [dir; folder; ^data] in
+      let des = "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" in
+      let des = String.concat "/" [dir; folder^"_"^data] in
+      let cmd = String.concat " " ["mv"; src; des] in
+      Sys.command cmdv in
+    List.map data_list in
+  List.map folder_f folder_list
+
   (* let group dir = 
     let res_list = list_of_files' (dir ^ "/results/") in 
     let ds_list = list_of_files' (dir ^ "/FileFinderData") in
@@ -405,6 +420,7 @@ let main () =
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
   close_out oc;
+  wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0"
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
   ;;
