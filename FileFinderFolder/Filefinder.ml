@@ -371,16 +371,16 @@ let surf_dict dir cmd_list =
 (** [wsj0_unbox dir] distributes the files found in wsj0 into a data folder,
   * ready to be processed by [find_words]. *)
 let wsj0_unbox dir = (*wsj0*)
-  let folder_list = list_of_files dir in
+  let folder_list = clean_list (list_of_files dir) [] in
   let folder_f folder = (*sd_dt_05*)
-    let data_list = list_of_files (dir ^ "/" ^ folder) in 
+    let data_list = clean_list (list_of_files (dir ^ "/" ^ folder)) [] in 
     let data_f data = (*00a*)
-      let src = String.concat "/" [dir; folder; ^data] in
+      let src = String.concat "/" [dir; folder; data] in
       let des = "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" in
-      let des = String.concat "/" [dir; folder^"_"^data] in
+      let des = String.concat "/" [des; folder^"_"^data] in
       let cmd = String.concat " " ["mv"; src; des] in
-      Sys.command cmdv in
-    List.map data_list in
+      Sys.command cmd in
+    List.map data_f data_list in
   List.map folder_f folder_list
 
   (* let group dir = 
@@ -396,7 +396,7 @@ let wsj0_unbox dir = (*wsj0*)
           ignore(Sys.command ("mkdir " ^ dest_folder ^ name)) *)
 
 let main () = 
-  let simpleton = fun x y z -> x in
+  (* let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
   let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
@@ -419,7 +419,7 @@ let main () =
   else if argv.(6) = "surf" then
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
-  close_out oc;
+  close_out oc; *)
   wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0"
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
