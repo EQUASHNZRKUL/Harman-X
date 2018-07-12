@@ -21,6 +21,12 @@ let list_of_files foldername =
   let files = Sys.readdir foldername in
   Array.to_list files
 
+(** [list_of_files' foldername] is the list representation of the contents of
+  * directory [foldername] but with [foldername]/ concatenated to each one. *)
+let list_of_files' foldername = 
+  let files = Sys.readdir foldername in
+  List.map (fun x -> foldername ^ "/" ^ x) (Array.to_list files)
+
 (** [accesstext_voxforge folder] is the access function for VoxForge prompts. It
   * returns the text representation of the data found in location [folder]. *)
 let accesstext_voxforge folder data = 
@@ -95,6 +101,9 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
     let des = String.concat "/" [folder; datadir; data; wavdir; wav] in
     String.concat "" [des; ".wav"]
 
+  (** [try_vox predes lst] is the file contents of predes/(first matching prompt
+    * found in [lst]). Helper to [accesstext_vox], its necessary since Vox does
+    * not have consistent directory structure. *)
   let rec try_vox predes lst = 
     match lst with 
     | [] -> raise (Sys_error "out of options in lst")
@@ -105,13 +114,16 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
       with Sys_error x -> 
         try_vox predes t
 
+  (** [accesstext_vox folder data] is the file contents of a data point found 
+    * at )folder/data/etc/(prompts-original)*)
   let accesstext_vox folder data = 
     let predes = folder ^ "/" ^ data ^ "/etc/" in
-    (* let des = predes ^ "/etc/prompts-original" in *)
     let l = ["prompts-original"; "PROMPTS"; "prompt.txt"; "Transcriptions.txt";
             "prompts.txt"] in
     try_vox predes l 
 
+  (** [accesswav_vox folder data wav] is the wav directory of a vox data point. 
+    * ([folder]/[data]/wav/[wav].wav). *)
   let accesswav_vox folder data wav = 
     let predes = folder ^ "/" ^ data ^ "/wav/" in
     let wav' = try 
@@ -120,34 +132,50 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
     with Not_found -> wav in
     predes ^ wav'^ ".wav"
 
+  (** [accesstext_libri folder data] is the file contents of a libri data point
+    * ([folder]/[data]/[data].trans.txt*)
   let accesstext_libri folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".trans.txt" in
     read_file dest
 
-  let accessflac_libri folder data wav = (String.concat "/" [folder; data; wav]) ^ ".flac"
+  (** [accessflac_libri folder data wav] is the flac directory of a libri data
+    * point ([folder]/[data]/[wav].flac) where [folder] is the libri directory, 
+    * [data] is the directory of the data folder from [folder] and [wav] is the 
+    * label. *)
+  let accessflac_libri folder data wav = 
+    (String.concat "/" [folder; data; wav]) ^ ".flac"
 
+  (** [accesstext_surf folder data] is the file contents of a surf data point 
+    * ([folder]/text/text.txt) *)
   let accesstext_surf folder data = 
     let dest = folder ^ "/text/text.txt" in
     read_file dest
 
+  (** [accesswav_surf folder data wav] returns the wav directory of a surf data 
+    * point ([folder]/[data]/wav). *)
   let accesswav_surf folder data wav = 
     String.concat "/" [folder; data; wav]
 
+  (** [accesstext_vy folder data] returns the file contents of a vy data point 
+    * transcription ([folder]/[data]/[data].wav.trn) *)
   let accesstext_vy folder data = 
     let dest = folder ^ "/" ^ data ^ "/" ^ data ^ ".wav.trn" in
     read_file dest
 
+  (** [accesswav_vy folder data wav] returns the wav directory of a vy data 
+    * point ([folder]/[data]/[data].wav) *)
   let accesswav_vy folder data wav = 
     String.concat "/" [folder; data; data] ^ ".wav"
 
 (* Print Functions *)
 
-  (** [print_value set] prints the elements of a set. *)
+  (** [print_value set] prints the elements of a set into channel [c]. *)
   let print_value c set = 
     let f k acc = 
       Printf.fprintf c "        %s, \n" k; acc in
     S.fold f [] set
 
+  (** [print_value_ami c set] prints the elements of an AMI set into channel [c] *)
   let print_value_ami c set = 
     let f k acc = 
       Printf.fprintf c "        %s, \n" (AMID.str k); acc in
@@ -162,6 +190,7 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
       acc in
     D.fold f [] dict
 
+  (** [print_result_ami channel ami] prints the assoc_list rep of [dict]. *)
   let print_result_ami channel ami = 
     let f k v acc = 
       Printf.fprintf channel "\"%s\": [\n" k; 
@@ -180,7 +209,11 @@ let rec getCmdList str acc =
   with Not_found-> (*print_string "NF - "; print_string str;*)
     str::acc
 
-(* flattens the directory *)
+(** [flatten ds] is a script that "flattens" the LibriSpeech dataset [ds] into a
+  * format better for [find_words]. It is meant to be executed multiple times
+  * on separate LibriSpeech folders to combine them together into a single one.
+  * The resulting LibriSpeechFlat folder stores the .flac and transcriptions
+  * together in corresponding folders. *)
 let flatten ds = 
   let outerlist = clean_list (list_of_files ds) [] in
   let f book = 
@@ -194,6 +227,8 @@ let flatten ds =
     List.map g innerlist in
   List.map f outerlist
 
+(** [unflatten ds] is a script that "unflattens" Vystidial data [ds] and groups 
+  * the wav and transcription files together in their corresponding folders. *)
 let unflatten ds = 
   let file_list = list_of_files ds in
   let f s = if s = ".DS_Store" then Sys.command "cd ." else
@@ -205,6 +240,16 @@ let unflatten ds =
               ^ dest ^ "/" ^ s in
     Sys.command cmd in
   List.map f file_list
+
+(** [ami_cleanup] is a script that moves files from array folders in [ds] and
+  * flattens them into [target] but differs from [flatten ds] as it cleans up
+  * the names so that they are referencible from *)
+(* let ami_cleanup ds target = 
+  let arr_list = list_of_files ds in
+  let f arr = 
+    let folder_list = list_of_files (ds ^ arr) in
+    let g folder = 
+      let dir =  *)
 
 (** [make_cmd_dict word_dict cmd_dict] is the command dictionary (keys: commands
   * values: sets of wavids) made from the wav dictionary [word_dict] (keys: wavs
@@ -226,12 +271,16 @@ let rec make_cmd_dict word_dict cmd_dict =
 
 (** [contains s1 s2] is true if s2 exists in s1 as a substring (case-blind). 
   * (s1 contains s2) == (s1 <~= s2) *)
-  let (<~=) s1 s2 = 
+let (<~=) s1 s2 = 
   let s1 = String.lowercase_ascii s1 in
   let s2 = String.lowercase_ascii s2 in
   let re = Str.regexp_string s2 in
   try ignore (Str.search_forward re s1 0); true
   with Not_found -> false
+
+(** [s -:- (i1, i2)] is the substring of s from i1 to i2 (inclusive) s[i1:i2] *)
+let (-:-) s (i1,i2) = 
+  String.sub s i1 (i2-i1+1)
 
 (** [valid_lines] returns the valid wave file names from the [prompt_list] which
   * is the list of prompts, each element corresponding to a separate 5 sec wav
@@ -296,6 +345,9 @@ let ami_dict dir cmd_list =
     List.fold_left g dictacc lines in
   List.fold_left f Dami.empty files
 
+(** [surf_dict dir cmd_list] is the dictionary resulting from parsing the surf
+  * database found at directory [dir] with commands from [cmd_list]. The result
+  * dict has cmds as keys and sets of wav directories as values. *)
 let surf_dict dir cmd_list = 
   let des = dir ^ "/text/text.txt" in
   let lines = read_file des in
@@ -316,6 +368,18 @@ let surf_dict dir cmd_list =
     else dict in
   List.fold_left line_f D.empty lines
 
+  (* let group dir = 
+    let res_list = list_of_files' (dir ^ "/results/") in 
+    let ds_list = list_of_files' (dir ^ "/FileFinderData") in
+    let res_f txt = 
+      let text_list = read_file txt in
+      let line_f line = 
+        let dest_folder = dir ^ "/PSF/data" in
+        match (String.index_opt line '[') with
+        | None -> 
+        | Some i -> let name = String.sub line 1 (i-4) in
+          ignore(Sys.command ("mkdir " ^ dest_folder ^ name)) *)
+
 let main () = 
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
@@ -324,10 +388,13 @@ let main () =
   (* let taccess = accesstext_maker args.(3) args.(4) in *)
   let waccess = accesswav_maker args.(3) args.(5) in
   let res,txtout = (match argv.(6) with 
-    | "vox" -> (find_words cmdlist accesstext_vox accesswav_vox dirpath true, "vox_results.txt")
-    | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath true, "libri_results.txt")
+    | "vox" -> (find_words cmdlist accesstext_vox accesswav_vox dirpath true, 
+                "vox_results.txt")
+    | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath 
+                true, "libri_results.txt")
     | "surf" -> (surf_dict dirpath cmdlist, "surf_results.txt")
-    | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, "vy_results.txt")
+    | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, 
+              "vy_results.txt")
     | "ami" -> (D.empty, "ami_results.txt")
     | _ -> D.empty,"") in
   let cmd_dict = make_cmd_dict res D.empty in
