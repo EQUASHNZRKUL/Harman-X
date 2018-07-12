@@ -390,9 +390,10 @@ let txtify dir =
     let rename file = 
       let l = String.length file in
       if (String.sub file (l-4) 4) = ".dot" then 
-        ignore(Sys.command ("mv " ^ file ^ " " ^ (String.sub file 0 (l-4)) ^ ".txt")) in
-    List.iter rename file_list in
-  List.iter folder_f point_list
+        (Sys.command ("mv " ^ file ^ " " ^ (String.sub file 0 (l-4)) ^ ".txt")) 
+        else 0 in
+    List.map rename file_list in
+  List.map folder_f point_list
 
   (* let group dir = 
     let res_list = list_of_files' (dir ^ "/results/") in 
@@ -431,7 +432,8 @@ let main () =
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
   close_out oc; *)
-  wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0"
+  txtify "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0"
+  (* wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0" *)
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
   ;;
