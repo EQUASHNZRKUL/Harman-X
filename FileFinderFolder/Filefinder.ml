@@ -419,35 +419,6 @@ let wsj0_dict dir cmd_list=
     List.fold_left text_f dict txt_list in
   List.fold_left point_f D.empty point_list
 
-    (* let title_list = List.map f txt_list in
-    let folder_matrix =
-      List.map (fun t -> List.filter (fun f -> f <~= t) file_list) title_list in
-    let txt_read subpoint = 
-      let txt = List.hd (List.filter (fun x -> x <~= ".txt") subpoint) in
-      let lines = read_file txt in
-      let f dict prompt = 
-        let g set cmd = if prompt <~= cmd then S.insert cmd set else set in
-        let v = List.fold_left g S.empty cmd_list in
-        if v != S.empty then
-          let i = String.rindex prompt '(' in
-          let l = String.length prompt in
-          let k = String.sub prompt (i+1) (l-i-2) in
-          let wav = (String.concat "/" [dir; point; k]) ^ ".wav" *)
-    (* in *)
-  (* List.map folder_f point_list *)
-
-  (* let group dir = 
-    let res_list = list_of_files' (dir ^ "/results/") in 
-    let ds_list = list_of_files' (dir ^ "/FileFinderData") in
-    let res_f txt = 
-      let text_list = read_file txt in
-      let line_f line = 
-        let dest_folder = dir ^ "/PSF/data" in
-        match (String.index_opt line '[') with
-        | None -> 
-        | Some i -> let name = String.sub line 1 (i-4) in
-          ignore(Sys.command ("mkdir " ^ dest_folder ^ name)) *)
-
 let main () = 
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
