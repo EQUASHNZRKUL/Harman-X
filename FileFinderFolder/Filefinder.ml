@@ -19,7 +19,7 @@ let read_file filename =
   * directory ./[foldername] *)
 let list_of_files foldername = 
   let files = Sys.readdir foldername in
-  Array.to_list files
+  List.filter (fun x -> x != ".DS_Store") (Array.to_list files)
 
 (** [list_of_files' foldername] is the list representation of the contents of
   * directory [foldername] but with [foldername]/ concatenated to each one. *)
@@ -383,17 +383,58 @@ let wsj0_unbox dir = (*wsj0*)
     List.map data_f data_list in
   List.map folder_f folder_list
 
+(** [txtify dir] converts the .dot files into the .txt files that are readable*)
 let txtify dir = 
-  let point_list = clean_list (list_of_files dir) [] in
+  let point_list = clean_list (list_of_files dir) [] in (*WSJ0*)
   let folder_f point = 
-    let file_list = clean_list (list_of_files dir) [] in
+    let file_list = clean_list (list_of_files (dir ^ "/" ^ point)) [] in (*sx____*)
     let rename file = 
+      let file = String.concat "/" [dir; point; file] in
       let l = String.length file in
       if (String.sub file (l-4) 4) = ".dot" then 
         (Sys.command ("mv " ^ file ^ " " ^ (String.sub file 0 (l-4)) ^ ".txt")) 
         else 0 in
     List.map rename file_list in
   List.map folder_f point_list
+
+let wsj0_dict dir cmd_list= 
+  let point_list = clean_list (list_of_files dir) [] in (*WSJ0*)
+  let point_f dict point = 
+    let file_list = clean_list (list_of_files (dir ^ "/" ^ point)) [] in (*sx____*)
+    let txt_list = List.filter (fun x -> x <~= ".txt") file_list in
+    let text_f pdict txt = 
+      let prefix = String.sub txt 0 6 in
+      let lines = read_file (String.concat "/" [dir; point; txt]) in
+      let line_f dictacc prompt = 
+        let cmd_f set cmd = if prompt <~= cmd then S.insert cmd set else set in
+        let v = List.fold_left cmd_f S.empty cmd_list in
+        if v != S.empty then
+          let i = String.rindex prompt '(' in
+          let l = String.length prompt in
+          let loc = String.sub prompt (i+1) (l-i-2) in
+          let wav = (String.concat "/" [dir; point; loc]) ^ "_1.wav" in
+          D.insert wav v dictacc
+        else dictacc in
+      List.fold_left line_f pdict lines in
+    List.fold_left text_f dict txt_list in
+  List.fold_left point_f D.empty point_list
+
+    (* let title_list = List.map f txt_list in
+    let folder_matrix =
+      List.map (fun t -> List.filter (fun f -> f <~= t) file_list) title_list in
+    let txt_read subpoint = 
+      let txt = List.hd (List.filter (fun x -> x <~= ".txt") subpoint) in
+      let lines = read_file txt in
+      let f dict prompt = 
+        let g set cmd = if prompt <~= cmd then S.insert cmd set else set in
+        let v = List.fold_left g S.empty cmd_list in
+        if v != S.empty then
+          let i = String.rindex prompt '(' in
+          let l = String.length prompt in
+          let k = String.sub prompt (i+1) (l-i-2) in
+          let wav = (String.concat "/" [dir; point; k]) ^ ".wav" *)
+    (* in *)
+  (* List.map folder_f point_list *)
 
   (* let group dir = 
     let res_list = list_of_files' (dir ^ "/results/") in 
@@ -408,7 +449,7 @@ let txtify dir =
           ignore(Sys.command ("mkdir " ^ dest_folder ^ name)) *)
 
 let main () = 
-  (* let simpleton = fun x y z -> x in
+  let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
   let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
@@ -423,7 +464,8 @@ let main () =
     | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, 
               "vy_results.txt")
     | "ami" -> (D.empty, "ami_results.txt")
-    | _ -> D.empty,"") in
+    | "wsj" -> print_endline "wsj"; (wsj0_dict dirpath cmdlist, "wsj_results.txt")
+    | _ -> (D.empty,"")) in
   let cmd_dict = make_cmd_dict res D.empty in
   let oc = open_out ("results/" ^ txtout) in
   if argv.(6) = "ami" then 
@@ -431,8 +473,8 @@ let main () =
   else if argv.(6) = "surf" then
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
-  close_out oc; *)
-  txtify "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0"
+  close_out oc;
+  (* txtify "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" *)
   (* wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0" *)
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
