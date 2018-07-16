@@ -419,6 +419,41 @@ let wsj0_dict dir cmd_list=
     List.fold_left text_f dict txt_list in
   List.fold_left point_f D.empty point_list
 
+  let result_reader dir = 
+    let result_txts = list_of_files dir in 
+    let read_res accdict resfile = 
+      let curr_key = ref "" in
+      let line_list = read_file resfile in
+      let dict_maker dict line = 
+        if (line = "]") then dict else 
+        if (line <~= ": [") then 
+          let i = String.index line ':' in
+          curr_key := (String.sub line 1 (i-2)); dict
+        else 
+          let v = String.trim line in 
+          let set = D.find (!curr_key) dict in
+          let val = (match set with
+          | None -> S.insert v S.empty
+          | Some s -> S.insert v s) in
+          D.insert (!curr_key) val dict in
+      List.fold_left dict_maker accdict line_list in
+    List.fold_left read_res D.empty result_txts 
+
+  let dir_accumulate dict des = 
+    let res_dict = result_reader des in
+    let dict_function k v dict = 
+      let set_function e acc = 
+        let i = String.rindex e '/' in
+        let name = String.sub (i+1) (String.length - i - 3) in
+        let des = "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" ^ k ^ "/" in
+        let cmd = String.concat " " ["cp";e;des] in
+        acc + (Sys.command cmd) in
+      S.fold set_function v in
+    D.fold dict_function 0 res_dict 
+
+          
+        
+
 let main () = 
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
