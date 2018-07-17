@@ -66,3 +66,8 @@ all:
 	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial" "" "" "" "vy" 
 	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/AMI/ami_manual_1.6.1/words" "" "" "" "ami" 
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
+
+setup: 
+	ocamlopt -o DataUploadSetup data.mli data.ml str.cmxa Filefinder.ml DataUploadSetup.ml
+	./DataUploadSetup 
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi DataUploadSetup.cmi DataUploadSetup.cmx DataUploadSetup

@@ -6,10 +6,10 @@ TODO 7/11/18
  - FIX Vy output for PSF
  - WRITE AMI function for PSF
  - WRITE Specs for PSF
- - AMI Cleanup
+ √ AMI Cleanup
  √ DOWNLOAD WSJ0
- - WSJ Processing
- - Group up all valid wavs
-   - ACCESS results.txt
-   - PARSE lines
-   - COPY to folder 
+ √ WSJ Processing
+ √ Group up all valid wavs
+   √ ACCESS results.txt
+   √ PARSE lines
+   √ COPY to folder 
