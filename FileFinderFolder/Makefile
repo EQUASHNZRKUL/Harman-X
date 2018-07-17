@@ -16,7 +16,7 @@ check:
 clean:
 	ocamlbuild -clean
 	rm -f a3src.zip
-	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder 
 
 exec:
 # ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
@@ -68,6 +68,6 @@ all:
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
 
 setup: 
-	ocamlopt -o DataUploadSetup data.mli data.ml str.cmxa Filefinder.ml DataUploadSetup.ml
-	./DataUploadSetup 
-	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi DataUploadSetup.cmi DataUploadSetup.cmx DataUploadSetup
+	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
+	./Filefinder "setup"
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
