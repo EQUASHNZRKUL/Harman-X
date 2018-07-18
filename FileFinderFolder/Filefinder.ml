@@ -493,11 +493,11 @@ let dir_accumulate res_dict predes =
   D.fold dict_function 0 res_dict 
 
 let main () = 
-  if argv.(1) = "setup" then 
+  (* if argv.(1) = "setup" then 
     let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
     let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
     ignore(trash)
-  else
+  else *)
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
