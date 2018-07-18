@@ -433,7 +433,7 @@ let wsj0_dict dir cmd_list=
   * [txtdir] in [oc]. *)
 let ami_textify txtdir channel = 
   let line_list = read_file txtdir in
-  print_int (List.length line_list);
+  (* print_int (List.length line_list); *)
   let line_f line = 
     let str = 
       if (line <~= "]") then line
@@ -482,7 +482,26 @@ let dir_accumulate res_dict predes =
   let dict_function k v acc = 
     let set_function e acc = 
       let i = String.rindex e '/' in
-      let name = String.sub e (i+1) ((String.length e) - i - 3) in
+      let name = String.sub e (i+1) ((String.length e) - i - 1) in
+      (* let trash = Sys.command ("mkdir " ^ predes ^ k) in *)
+      let des = predes ^ k ^ "/" ^ name in
+      let cmd = String.concat " " ["cp -R";e;des] in
+      try
+        acc + (Sys.command cmd)
+      with Sys_error x -> 
+        raise (Sys_error cmd) in
+    S.fold set_function 0 v in
+  D.fold dict_function 0 res_dict 
+
+(** [dir_accumulate_merged] copies the wav files found in [dict] to [des] in 
+  * folders corresponding to keys. *)
+let dir_accumulate_merged res_dict predes cmdlst = 
+  print_endline "dir_accumulate";
+  let dict_function k v acc = 
+    let set_function e acc = 
+      let i = String.rindex e '/' in
+      let name = String.sub e (i+1) ((String.length e) - i - 1) in
+      (* let trash = Sys.command ("mkdir " ^ predes ^ k) in *)
       let des = predes ^ k ^ "/" ^ name in
       let cmd = String.concat " " ["cp -R";e;des] in
       try
@@ -493,11 +512,12 @@ let dir_accumulate res_dict predes =
   D.fold dict_function 0 res_dict 
 
 let main () = 
-  (* if argv.(1) = "setup" then 
+  if argv.(2) = "export" then 
     let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
     let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
+    let trash = dir_accumulate_merged results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" argv.(1) in
     ignore(trash)
-  else *)
+  else
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
@@ -519,7 +539,9 @@ let main () =
   let oc = open_out ("results/" ^ txtout) in
   if argv.(6) = "ami" then 
     (ignore(print_result_ami oc (ami_dict dirpath cmdlist));
-    ignore(ami_textify "results/metadata.ami_results.txt" (open_out "results/ami_results.txt")))
+    close_out oc;
+    let oc = open_out ("results/ami_results.txt") in
+    ami_textify "results/metadata.ami_results.txt" oc)
   else if argv.(6) = "surf" then 
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
