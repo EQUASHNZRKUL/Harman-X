@@ -478,7 +478,7 @@ let total_res_dict dir =
 (** [dir_accumulate] copies the wav files found in [dict] to [des] in 
   * folders corresponding to keys. *)
 let dir_accumulate res_dict predes = 
-  print_endline "dir_accumulate";
+  (* print_endline "dir_accumulate"; *)
   let dict_function k v acc = 
     let set_function e acc = 
       let i = String.rindex e '/' in
@@ -493,15 +493,22 @@ let dir_accumulate res_dict predes =
     S.fold set_function 0 v in
   D.fold dict_function 0 res_dict 
 
+(** [get_key k cmdlst] is the elt corresponding to [k] from [cmdlst]. *)
+let rec get_key k cmdlst = 
+  match cmdlst with
+  | [] -> raise End_of_file 
+  | h::t -> if k <~= h then h else get_key k t
+
 (** [dir_accumulate_merged] copies the wav files found in [dict] to [des] in 
-  * folders corresponding to keys. *)
+  * folders corresponding to keys from [cmdlst]. *)
 let dir_accumulate_merged res_dict predes cmdlst = 
-  print_endline "dir_accumulate";
+  (* print_endline "dir_accumulate"; *)
   let dict_function k v acc = 
     let set_function e acc = 
       let i = String.rindex e '/' in
       let name = String.sub e (i+1) ((String.length e) - i - 1) in
       (* let trash = Sys.command ("mkdir " ^ predes ^ k) in *)
+      let k = get_key k cmdlst in
       let des = predes ^ k ^ "/" ^ name in
       let cmd = String.concat " " ["cp -R";e;des] in
       try
@@ -515,7 +522,7 @@ let main () =
   if argv.(2) = "export" then 
     let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
     let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
-    let trash = dir_accumulate_merged results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" argv.(1) in
+    let trash = dir_accumulate_merged results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data_merged/" argv.(1) in
     ignore(trash)
   else
   let simpleton = fun x y z -> x in
