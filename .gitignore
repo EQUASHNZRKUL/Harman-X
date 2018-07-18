@@ -6,6 +6,7 @@ Filefinder.o
 FileFinderFolder/PSF/data/
 FileFinderFolder/PSF/MFCCData/
 results/
+metadata.ami_results.txt
 ResultSheet.xlsx
 FileFinderData/
 FileFinderData/1028-20100710-hne/LICENSE

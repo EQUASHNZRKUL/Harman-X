@@ -181,6 +181,9 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
       Printf.fprintf c "        %s, \n" (AMID.str k); acc in
     Sami.fold f [] set
 
+  let channel_print str channel = 
+    Printf.fprintf channel "%s" str
+  
   (** [print_result dict] prints the assoc_list representation of [dict]. *)
   let print_result channel dict = 
     let f k v acc = 
@@ -420,10 +423,27 @@ let wsj0_dict dir cmd_list=
     List.fold_left text_f dict txt_list in
   List.fold_left point_f D.empty point_list
 
-(** [result_reader dir] is the dict representation of the result textfiles @ 
+(** [ami_textify txtdir tardir oc] creates a result.txt of [ami] metadata in 
+  * [txtdir] in [oc]. *)
+let ami_textify txtdir channel = 
+  let line_list = read_file txtdir in
+  print_int (List.length line_list);
+  let line_f line = 
+    let str = 
+      if (line <~= "]") then line
+      else if (line <~= "[") then line else
+      let i = String.index line '=' in
+      let j = String.index line ';' in
+      let s = String.sub line (i+2) (j-i-2) in
+      "        /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/AMI/Arrays/Array1-01/"
+        ^ s ^ ", " in
+    Printf.fprintf channel "%s\n" str; in
+  List.iter line_f line_list
+
+(** [total_res_dict dir] is the dict representation of the result textfiles @ 
   * [dir]. *)
-  let result_reader dir = 
-    let result_txts = list_of_files dir in 
+  let total_res_dict dir = 
+    let result_txts = clean_list (list_of_files' dir) [] in
     let read_res accdict resfile = 
       let curr_key = ref "" in
       let line_list = read_file resfile in
@@ -442,16 +462,17 @@ let wsj0_dict dir cmd_list=
           | Some x -> x) in
           D.insert (!curr_key) (S.insert v set) dict in
       List.fold_left dict_maker accdict line_list in
-    List.fold_left read_res D.empty result_txts 
+    let return = List.fold_left read_res D.empty result_txts in
+    print_endline "end total_res"; return
     
 (** [dir_accumulate] copies the wav files found in [dict] to [des] in 
   * folders corresponding to keys. *)
 let dir_accumulate res_dict predes = 
+  print_endline "dir_accumulate";
   let dict_function k v acc = 
     let set_function e acc = 
       let i = String.rindex e '/' in
       let name = String.sub e (i+1) ((String.length e) - i - 3) in
-      let trash = Sys.command ("mkdir " ^ predes ^ k) in
       let des = predes ^ k ^ "/" ^ name in
       let cmd = String.concat " " ["cp";e;des] in
       acc + (Sys.command cmd) in
@@ -459,9 +480,10 @@ let dir_accumulate res_dict predes =
   D.fold dict_function 0 res_dict 
 
 let main () = 
-  if argv(1) = "setup" then 
-    let results = result_reader "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
-    dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/"
+  if argv.(1) = "setup" then 
+    let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
+    let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
+    ignore(trash)
   else
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
@@ -477,17 +499,19 @@ let main () =
     | "surf" -> (surf_dict dirpath cmdlist, "surf_results.txt")
     | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, 
               "vy_results.txt")
-    | "ami" -> (D.empty, "ami_results.txt")
+    | "ami" -> (D.empty, "metadata.ami_results.txt")
     | "wsj" -> print_endline "wsj"; (wsj0_dict dirpath cmdlist, "wsj_results.txt")
     | _ -> (D.empty,"")) in
   let cmd_dict = make_cmd_dict res D.empty in
   let oc = open_out ("results/" ^ txtout) in
   if argv.(6) = "ami" then 
-    ignore(print_result_ami oc (ami_dict dirpath cmdlist))
+    (ignore(print_result_ami oc (ami_dict dirpath cmdlist));
+    ignore(ami_textify "results/metadata.ami_results.txt" (open_out "results/ami_results.txt")))
   else if argv.(6) = "surf" then
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
   close_out oc;
+  (* ami_textify "results/metadata.ami_results.txt" (open_out "results/ami_results.txt") *)
   (* txtify "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" *)
   (* wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0" *)
   (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
