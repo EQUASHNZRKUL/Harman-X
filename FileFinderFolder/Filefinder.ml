@@ -474,8 +474,11 @@ let dir_accumulate res_dict predes =
       let i = String.rindex e '/' in
       let name = String.sub e (i+1) ((String.length e) - i - 3) in
       let des = predes ^ k ^ "/" ^ name in
-      let cmd = String.concat " " ["cp";e;des] in
-      acc + (Sys.command cmd) in
+      let cmd = String.concat " " ["cp -R";e;des] in
+      try
+        acc + (Sys.command cmd)
+      with Sys_error x -> 
+        raise (Sys_error cmd) in
     S.fold set_function 0 v in
   D.fold dict_function 0 res_dict 
 
