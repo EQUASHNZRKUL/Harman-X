@@ -520,7 +520,7 @@ let main () =
   if argv.(6) = "ami" then 
     (ignore(print_result_ami oc (ami_dict dirpath cmdlist));
     ignore(ami_textify "results/metadata.ami_results.txt" (open_out "results/ami_results.txt")))
-  else if argv.(6) = "surf" then
+  else if argv.(6) = "surf" then 
     ignore (print_result oc res)
   else ignore (print_result oc cmd_dict);
   close_out oc;
