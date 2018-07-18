@@ -519,16 +519,16 @@ let dir_accumulate_merged res_dict predes cmdlst =
   D.fold dict_function 0 res_dict 
 
 let main () = 
-  if argv.(2) = "export" then 
-    let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
-    let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
-    let trash = dir_accumulate_merged results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data_merged/" argv.(1) in
-    ignore(trash)
-  else
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
   let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
+  if argv.(2) = "export" then 
+    let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
+    let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
+    let trash = dir_accumulate_merged results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data_merged/" cmdlist in
+    ignore(trash)
+  else
   (* let taccess = accesstext_maker args.(3) args.(4) in *)
   let waccess = accesswav_maker args.(3) args.(5) in
   let res,txtout = (match argv.(6) with 
