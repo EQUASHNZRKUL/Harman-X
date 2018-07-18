@@ -45,6 +45,12 @@ let accesswav_voxforge folder data wav =
     | [] -> acc
     | ".DS_Store"::t -> acc @ t
     | h::t -> clean_list t (List.rev (h::(List.rev acc)))
+  
+(** [list_removal lst rems] is [lst] with all elements from [rems] removed. *)
+  let rec list_removal lst rems = 
+    let f x = 
+      not (List.mem x rems) in
+    List.filter f lst 
 
 (*  --- Dictionary Section ---  *)
 
@@ -78,7 +84,7 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
 
 (** [print_list lst] prints the elements of string list [lst] *)
   let print_list lst = 
-    let f x = print_string x in
+    let f x = print_endline x in
     List.iter f lst
 
 (** ACCESS FUNCTIONS **)
@@ -433,37 +439,41 @@ let ami_textify txtdir channel =
       if (line <~= "]") then line
       else if (line <~= "[") then line else
       let i = String.index line '=' in
-      let j = String.index line ';' in
+      let j = String.index line '.' in
       let s = String.sub line (i+2) (j-i-2) in
       "        /Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/AMI/Arrays/Array1-01/"
-        ^ s ^ ", " in
+        ^ s ^ "/audio/" ^ s ^ ".Array1-01.wav, " in
     Printf.fprintf channel "%s\n" str; in
   List.iter line_f line_list
 
 (** [total_res_dict dir] is the dict representation of the result textfiles @ 
   * [dir]. *)
-  let total_res_dict dir = 
-    let result_txts = clean_list (list_of_files' dir) [] in
-    let read_res accdict resfile = 
-      let curr_key = ref "" in
-      let line_list = read_file resfile in
-      let dict_maker dict line = 
-        if (line <~= "]") then dict else
-        if (line <~= ": [") then 
-          let i = String.index line ':' in
-          print_endline ("in section 2: " ^ line);
-          curr_key := (String.sub line 1 (i-2)); dict
-        else 
-          let v = String.trim line in 
-          print_endline ("in section 3: " ^ line);
-          let set_opt = D.find (!curr_key) dict in
-          let set = (match set_opt with
-          | None -> S.empty
-          | Some x -> x) in
-          D.insert (!curr_key) (S.insert v set) dict in
-      List.fold_left dict_maker accdict line_list in
-    let return = List.fold_left read_res D.empty result_txts in
-    print_endline "end total_res"; return
+let total_res_dict dir = 
+  let result_txts = List.filter 
+    (fun s -> not ((s <~= ".DS_Store") || (s <~= "/data") || (s <~= "/metadata."))) 
+  (list_of_files' dir) in
+  print_list result_txts;
+  let read_res accdict resfile = 
+    let curr_key = ref "" in
+    let line_list = read_file resfile in
+    let dict_maker dict line = 
+      if (line <~= "]") then dict else
+      if (line <~= ": [") then 
+        let i = String.index line ':' in
+        (* print_endline ("in section 2: " ^ line); *)
+        curr_key := (String.sub line 1 (i-2)); dict
+      else 
+        let v = String.trim line in 
+        let v = String.sub v 0 ((String.length v) - 1) in
+        (* print_endline ("in section 3: " ^ line); *)
+        let set_opt = D.find (!curr_key) dict in
+        let set = (match set_opt with
+        | None -> S.empty
+        | Some x -> x) in
+        D.insert (!curr_key) (S.insert v set) dict in
+    List.fold_left dict_maker accdict line_list in
+  let return = List.fold_left read_res D.empty result_txts in
+  print_endline "end total_res"; return
     
 (** [dir_accumulate] copies the wav files found in [dict] to [des] in 
   * folders corresponding to keys. *)
