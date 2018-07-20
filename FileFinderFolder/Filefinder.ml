@@ -518,7 +518,7 @@ let dir_accumulate_merged res_dict predes cmdlst =
     S.fold set_function 0 v in
   D.fold dict_function 0 res_dict 
 
-let main () = 
+(* let main () = 
   let simpleton = fun x y z -> x in
   let args = Sys.argv in
   let cmdlist = getCmdList argv.(1) [] in
@@ -560,4 +560,4 @@ let main () =
   (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
   ;;
 
-main ()
+main () *)

@@ -29,9 +29,9 @@ eval:
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
 
 libri:
-	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
-	./Filefinder "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeechFlat" "" "" "" "libri"
-	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi Filefinder
+	ocamlopt -o main data.mli data.ml str.cmxa Filefinder.ml main.ml
+	./main "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeechFlat" "" "" "" "libri"
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
 
 vox:
 	ocamlopt -o Filefinder data.mli data.ml str.cmxa Filefinder.ml 
