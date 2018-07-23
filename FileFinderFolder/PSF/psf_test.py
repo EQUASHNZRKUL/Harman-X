@@ -2,10 +2,9 @@ from python_speech_features import mfcc
 from python_speech_features import delta
 from python_speech_features import logfbank
 
-from numpy import savez 
-
 import scipy.io.wavfile as wav
 import soundfile as sf
+import numpy as np
 
 def get_info(infostr):
     i1 = infostr.find("id = ")
@@ -62,17 +61,25 @@ def get_mfcc(wavfile):
 
 def write_dict(d):
     for cmd, arrlist in d.iteritems():
-        savez("./MFCCData/"+cmd, arrlist)
+        np.savez("./MFCCData/"+cmd, arrlist)
+
+def print_metadata(dir):
+    dic = np.load(dir)
+    for k, v in dic.iteritems:
+        print k + ":"
+        for mfcc in v:
+            print np.ndarray.shape(mfcc)
 
 def main():
-    dic = {}
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
-    write_dict(dic)
+    # dic = {}
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
+    # write_dict(dic)
+    print_metadata("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/follow.npz")
 
 if __name__ == "__main__":
     main()
