@@ -19,8 +19,15 @@ clean:
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
 
 exec:
-# ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
 	ocamlopt -o main data.mli data.ml str.cmxa Filefinder.ml main.ml
+	./main "libri" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeechFlat" "" "" "" 
+	./main "vox" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/VoxForge" "" "etc/prompts-original" "wav" 
+	./main "surf" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/SurfFolder" "" "" "" 
+	./main "vy" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial" "" "" "" 
+	./main "ami" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/AMI/ami_manual_1.6.1/words" "" "" "" 
+	./main "wsj" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" "" "" "" 
+	./main "export" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam"
+	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
 
 eval:
 # ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
