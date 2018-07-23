@@ -19,6 +19,14 @@ class VGG:
 
   def build(self, input):
 
+  def avg_pool(self, bot, name):
+
+  def max_pool(self, bot, name):
+
+  def conv_layer(self, bot, name):
+
+  def fc_layer(self, bot, name):
+
   def load_file(self, npz):
     key = npz[:-4]
     try:
@@ -29,3 +37,10 @@ class VGG:
     v = dic["arr_0"]
     for elt in v:
       self.datadict[key] = val.append(elt)
+
+  def _get_conv_filter(self, name):
+    return tf.constant(self.datadict[name][0], name="filter")
+
+  def _get_bias(self, name):
+
+  def _get_fc_weight(self, name):

@@ -69,10 +69,10 @@ def get_mfcc(wavfile):
     fbank_feat = logfbank(sig,rate)
     return d_mfcc_feat
 
-def write_dict(d):
+def write_dict(d, directory):
     """ Writes dictionary of np arrays into a folder [d] """
     for cmd, arrlist in d.iteritems():
-        np.savez("./MFCCData/"+cmd, arrlist)
+        np.savez(directory+cmd, arrlist)
 
 def print_shapes(dir):
     """ Prints lengths of arrays stored in an .npz file
@@ -90,6 +90,17 @@ def dlen(dict):
         print k, len(v)
     # return acc
 
+def merge_dic(d, cmdlist):
+    new_dict = {}
+    for k, v in d.iteritems():
+        for cmd in cmdlist:
+            if k.find(cmd) != -1:
+                try:
+                    new_dict[cmd] = new_dict[cmd] + (v)
+                except KeyError:
+                    new_dict[cmd] = v
+    return new_dict
+
 def main():
     dic = {}
     dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
@@ -98,7 +109,9 @@ def main():
     dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
     dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
     dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
-    write_dict(dic)
+    write_dict(dic, "./MFCCData_1/")
+    merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
+    write_dict(merged_dic, "./MFCCData_merged/")
     # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/smaller.npz")
 
 if __name__ == "__main__":
