@@ -342,13 +342,13 @@ let ami_dict dir cmd_list =
   let f dictacc file = 
     let lines = read_file (dir ^ "/" ^ file) in
     let g dict line = 
-      print_endline (line);
+      (* print_endline (line); *)
       let contains = List.fold_left (clst line) false cmd_list in
       if contains then 
         let info,k = get_info line in
         let valopt = Dami.find k dict in
         let set = (match valopt with | None -> Sami.empty | Some x -> x) in
-        print_endline ("contained");
+        (* print_endline ("contained"); *)
         Dami.insert k (Sami.insert info set) dict 
       else dict in
     List.fold_left g dictacc lines in
@@ -371,7 +371,7 @@ let surf_dict dir cmd_list =
       | None -> S.empty
       | Some v -> v) in
       let v' = S.insert wav s in
-      print_endline cmd;
+      (* print_endline cmd; *)
       D.insert cmd v' dict in
     List.fold_left cmd_f dict valcmds
     else dict in
@@ -452,7 +452,7 @@ let total_res_dict dir =
   let result_txts = List.filter 
     (fun s -> not ((s <~= ".DS_Store") || (s <~= "/data") || (s <~= "/metadata."))) 
   (list_of_files' dir) in
-  print_list result_txts;
+  (* print_list result_txts; *)
   let read_res accdict resfile = 
     let curr_key = ref "" in
     let line_list = read_file resfile in
@@ -473,7 +473,7 @@ let total_res_dict dir =
         D.insert (!curr_key) (S.insert v set) dict in
     List.fold_left dict_maker accdict line_list in
   let return = List.fold_left read_res D.empty result_txts in
-  print_endline "end total_res"; return
+  (* print_endline "end total_res"; return *)
     
 (** [dir_accumulate] copies the wav files found in [dict] to [des] in 
   * folders corresponding to keys. *)
@@ -517,47 +517,3 @@ let dir_accumulate_merged res_dict predes cmdlst =
         raise (Sys_error cmd) in
     S.fold set_function 0 v in
   D.fold dict_function 0 res_dict 
-
-(* let main () = 
-  let simpleton = fun x y z -> x in
-  let args = Sys.argv in
-  let cmdlist = getCmdList argv.(1) [] in
-  let dirpath = if argv.(2) = "" then "./FileFinderData" else argv.(2) in
-  if argv.(2) = "export" then 
-    let results = total_res_dict "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/" in
-    let trash = dir_accumulate results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data/" in
-    let trash = dir_accumulate_merged results "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/data_merged/" cmdlist in
-    ignore(trash)
-  else
-  (* let taccess = accesstext_maker args.(3) args.(4) in *)
-  let waccess = accesswav_maker args.(3) args.(5) in
-  let res,txtout = (match argv.(6) with 
-    | "vox" -> (find_words cmdlist accesstext_vox accesswav_vox dirpath true, 
-                "vox_results.txt")
-    | "libri" -> (find_words cmdlist accesstext_libri accessflac_libri dirpath 
-                true, "libri_results.txt")
-    | "surf" -> (surf_dict dirpath cmdlist, "surf_results.txt")
-    | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, 
-              "vy_results.txt")
-    | "ami" -> (D.empty, "metadata.ami_results.txt")
-    | "wsj" -> print_endline "wsj"; (wsj0_dict dirpath cmdlist, "wsj_results.txt")
-    | _ -> (D.empty,"")) in
-  let cmd_dict = make_cmd_dict res D.empty in
-  let oc = open_out ("results/" ^ txtout) in
-  if argv.(6) = "ami" then 
-    (ignore(print_result_ami oc (ami_dict dirpath cmdlist));
-    close_out oc;
-    let oc = open_out ("results/ami_results.txt") in
-    ami_textify "results/metadata.ami_results.txt" oc)
-  else if argv.(6) = "surf" then 
-    ignore (print_result oc res)
-  else ignore (print_result oc cmd_dict);
-  close_out oc;
-  (* ami_textify "results/metadata.ami_results.txt" (open_out "results/ami_results.txt") *)
-  (* txtify "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" *)
-  (* wsj0_unbox "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0_meta/wsjdt/wsj0" *)
-  (* flatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeech_360/train-clean-360" *)
-  (* unflatten "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/Vystidial/data/" *)
-  ;;
-
-main () *)
