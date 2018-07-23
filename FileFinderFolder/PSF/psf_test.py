@@ -24,32 +24,78 @@ def read_ami(filename, d={}):
     for line in resfile:
         if "[" in line : 
             key = line[1:-5]
-            d[key] = []
-        if (not "[" in line) and (not "]" in line):
+            try: 
+                d[key]
+            except KeyError:
+                d[key] = []
             info = get_info(line)
             id = info[0]
             s1 = id.find('.')
             id = id[:s1]
             dir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI/data/" + id + "/audio/" + id 
-            print dir
+            # print dir
             mfcc = get_mfcc(dir)
-            d[key] = d[key] + [mfcc]
+            d[key] = d[key].append(mfcc)
     return d
 
-def read_res(filename, d={}):
+# def read_res(filename, d={}):
+#     resfile = open(filename, 'r')
+#     key = None
+#     for line in resfile:
+#         if "[" in line :
+#             key = line[1:-5]
+#             d[key] = [] # TODO: FIX!!! THIS LINE IS DELETING ALL PREV ENTRIES
+#         if (not "[" in line) and (not "]" in line):
+#             dir = line.strip()[:-1]
+#             print dir
+#             mfcc = get_mfcc(dir)
+#             d[key] = d[key] + [mfcc]
+#     return d
+
+def read_res(filename, acc={}):
     """ Returns dictionary representation of res file [filename] with [d]. """
     resfile = open(filename, 'r')
     key = None
+    i = 0
     for line in resfile:
+        i+= 1
+        print i
+        print "key 49: " + str(key)
+        if i > 1:
+            print "acc[key] 49: ",
+            print acc[key]
         if "[" in line :
             key = line[1:-5]
-            d[key] = []
-        if (not "[" in line) and (not "]" in line):
+            try: 
+                acc[key]
+            except KeyError:
+                print str(i) + " went in KeyError"
+                print "key 56: " + key
+                acc[key] = []
+                print "acc[key] 58: ", 
+                print acc[key]
+        elif (not "[" in line) and (not "]" in line):
+            print "acc[key] 60: ", 
+            print acc[key]
             dir = line.strip()[:-1]
-            print dir
+            # print dir
             mfcc = get_mfcc(dir)
-            d[key] = d[key] + [mfcc]
-    return d
+            # acc[key] = acc[key].append(mfcc)
+            try:
+                # print mfcc is None
+                acc[key] = (acc[key]).append(mfcc) #TODO: BROKEN FUCKING LINE
+                print "acc[key] 88: ", 
+                print acc[key]
+                # print acc[key]
+            except AttributeError:
+                print "--- FAILED ---"
+                acc[key] = [mfcc]
+                print "key 71: " + key
+                print "line: " + line
+                print "acc[key] 73: ",
+                print acc[key]
+                raise Exception
+    return acc
 
 def get_mfcc(wavfile):
     """ Returns the 13 MFCC values of [wavfile]. Can process .flac as well"""
@@ -73,20 +119,55 @@ def print_shapes(dir):
     """ Prints lengths of arrays stored in an .npz file
     Purely for testing/diagnostic purposes. """
     dic = np.load(dir)
+    print dic.files
     v = dic["arr_0"]
     for elt in v: 
         print elt.shape
 
+def dlen(dict):
+    acc = 0
+    for k, v in dict.iteritems():
+        acc = acc + len(v)
+        print k, len(v)
+    # return acc
+
 def main():
     dic = {}
+
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
-    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
-    write_dict(dic)
-    # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/follow.npz")
+    # print ("**libri: ")
+    # dlen(dic)
+
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    # print ("**surf: ")
+    # dlen(dic)
+
+    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    # print ("**vy: ")
+    # dlen(dic)
+
+    # # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    # # print ("**wsj: ")
+    # # dlen(dic)
+
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
+    # print dlen(dic)    
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    # print dlen(dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
+    # print dlen(dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    # print dlen(dic)
+
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+
+    # write_dict(dic)
+    # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/smaller.npz")
 
 if __name__ == "__main__":
     main()
