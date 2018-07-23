@@ -473,7 +473,8 @@ let total_res_dict dir =
         D.insert (!curr_key) (S.insert v set) dict in
     List.fold_left dict_maker accdict line_list in
   let return = List.fold_left read_res D.empty result_txts in
-  (* print_endline "end total_res"; return *)
+  (* print_endline "end total_res";  *)
+  return
     
 (** [dir_accumulate] copies the wav files found in [dict] to [des] in 
   * folders corresponding to keys. *)
