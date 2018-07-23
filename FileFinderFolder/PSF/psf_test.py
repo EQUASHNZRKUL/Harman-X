@@ -47,7 +47,6 @@ def read_ami(filename, d={}):
 #             d[key] = [] # TODO: FIX!!! THIS LINE IS DELETING ALL PREV ENTRIES
 #         if (not "[" in line) and (not "]" in line):
 #             dir = line.strip()[:-1]
-#             print dir
 #             mfcc = get_mfcc(dir)
 #             d[key] = d[key] + [mfcc]
 #     return d
@@ -56,45 +55,18 @@ def read_res(filename, acc={}):
     """ Returns dictionary representation of res file [filename] with [d]. """
     resfile = open(filename, 'r')
     key = None
-    i = 0
     for line in resfile:
-        i+= 1
-        print i
-        print "key 49: " + str(key)
-        if i > 1:
-            print "acc[key] 49: ",
-            print acc[key]
         if "[" in line :
             key = line[1:-5]
             try: 
                 acc[key]
             except KeyError:
-                print str(i) + " went in KeyError"
-                print "key 56: " + key
                 acc[key] = []
-                print "acc[key] 58: ", 
-                print acc[key]
         elif (not "[" in line) and (not "]" in line):
-            print "acc[key] 60: ", 
-            print acc[key]
             dir = line.strip()[:-1]
             # print dir
             mfcc = get_mfcc(dir)
-            # acc[key] = acc[key].append(mfcc)
-            try:
-                # print mfcc is None
-                acc[key] = (acc[key]).append(mfcc) #TODO: BROKEN FUCKING LINE
-                print "acc[key] 88: ", 
-                print acc[key]
-                # print acc[key]
-            except AttributeError:
-                print "--- FAILED ---"
-                acc[key] = [mfcc]
-                print "key 71: " + key
-                print "line: " + line
-                print "acc[key] 73: ",
-                print acc[key]
-                raise Exception
+            (acc[key]).append(mfcc) #fuck this line
     return acc
 
 def get_mfcc(wavfile):
