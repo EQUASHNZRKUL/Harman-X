@@ -38,19 +38,6 @@ def read_ami(filename, d={}):
             d[key] = d[key].append(mfcc)
     return d
 
-# def read_res(filename, d={}):
-#     resfile = open(filename, 'r')
-#     key = None
-#     for line in resfile:
-#         if "[" in line :
-#             key = line[1:-5]
-#             d[key] = [] # TODO: FIX!!! THIS LINE IS DELETING ALL PREV ENTRIES
-#         if (not "[" in line) and (not "]" in line):
-#             dir = line.strip()[:-1]
-#             mfcc = get_mfcc(dir)
-#             d[key] = d[key] + [mfcc]
-#     return d
-
 def read_res(filename, acc={}):
     """ Returns dictionary representation of res file [filename] with [d]. """
     resfile = open(filename, 'r')
