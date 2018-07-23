@@ -28,8 +28,7 @@ def read_ami(filename, d={}):
             id = info[0]
             s1 = id.find('.')
             id = id[:s1]
-            dir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI/data/" + 
-                 id + "/audio/" + id 
+            dir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI/data/" + id + "/audio/" + id 
             print dir
             mfcc = get_mfcc(dir)
             d[key] = d[key] + [mfcc]
@@ -71,7 +70,7 @@ def main():
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-    read_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
     write_dict(dic)
 
