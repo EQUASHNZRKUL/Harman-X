@@ -63,23 +63,24 @@ def write_dict(d):
     for cmd, arrlist in d.iteritems():
         np.savez("./MFCCData/"+cmd, arrlist)
 
-def print_metadata(dir):
+""" Purely for testing purposes, prints lengths of arrays stored in an .npz file
+"""
+def print_shapes(dir):
     dic = np.load(dir)
-    for k, v in dic.iteritems:
-        print k + ":"
-        for mfcc in v:
-            print np.ndarray.shape(mfcc)
+    v = dic["arr_0"]
+    for elt in v: 
+        print elt.shape
 
 def main():
-    # dic = {}
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
-    # write_dict(dic)
-    print_metadata("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/follow.npz")
+    dic = {}
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
+    write_dict(dic)
+    # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/follow.npz")
 
 if __name__ == "__main__":
     main()
