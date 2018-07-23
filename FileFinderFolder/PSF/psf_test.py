@@ -33,12 +33,12 @@ def read_ami(filename, d={}):
             s1 = id.find('.')
             id = id[:s1]
             dir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI/data/" + id + "/audio/" + id 
-            # print dir
+            print dir
             mfcc = get_mfcc(dir)
-            d[key] = d[key].append(mfcc)
+            d[key].append(mfcc)
     return d
 
-def read_res(filename, acc={}):
+def read_res(filename, d={}):
     """ Returns dictionary representation of res file [filename] with [d]. """
     resfile = open(filename, 'r')
     key = None
@@ -46,15 +46,15 @@ def read_res(filename, acc={}):
         if "[" in line :
             key = line[1:-5]
             try: 
-                acc[key]
+                d[key]
             except KeyError:
-                acc[key] = []
+                d[key] = []
         elif (not "[" in line) and (not "]" in line):
             dir = line.strip()[:-1]
-            # print dir
+            print dir
             mfcc = get_mfcc(dir)
-            (acc[key]).append(mfcc) #fuck this line
-    return acc
+            (d[key]).append(mfcc) #fuck this line
+    return d
 
 def get_mfcc(wavfile):
     """ Returns the 13 MFCC values of [wavfile]. Can process .flac as well"""
@@ -94,20 +94,20 @@ def main():
     dic = {}
 
     read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
-    # print ("**libri: ")
-    # dlen(dic)
+    print ("**libri: ")
+    dlen(dic)
 
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
-    # print ("**surf: ")
-    # dlen(dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    print ("**surf: ")
+    dlen(dic)
 
-    # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-    # print ("**vy: ")
-    # dlen(dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    print ("**vy: ")
+    dlen(dic)
 
-    # # read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
-    # # print ("**wsj: ")
-    # # dlen(dic)
+    read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    print ("**wsj: ")
+    dlen(dic)
 
     # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
     # print dlen(dic)    
