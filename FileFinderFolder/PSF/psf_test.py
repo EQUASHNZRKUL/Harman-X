@@ -40,10 +40,10 @@ der/FileFinderData/AMI_cut/Arrays/Array1-01/" + id
       cmd2 = cmd1 + "/" + key
       os.system(cmd2)
       i = len(os.listdir("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFol\
-der/FileFinderData/AMI_cut/Arrays/Array1-01/" + id)) - 1
+der/FileFinderData/AMI_cut/Arrays/Array1-01/" + id + "/" + key))
       newdir = "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder\
 /FileFinderData/AMI_cut/Arrays/Array1-01/" + id + "/" + key + "/" + id + ".file\
-" + i + ".wav"
+" + str(i) + ".wav"
       t1 = info[1]*1000 - 50
       t2 = info[2]*1000 + 50
       newAudio = AudioSegment.from_wav(dir)
