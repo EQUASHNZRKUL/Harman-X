@@ -1,6 +1,7 @@
 from python_speech_features import mfcc
 from python_speech_features import delta
 from python_speech_features import logfbank
+from pydub import AudioSegment
 
 import scipy.io.wavfile as wav
 import soundfile as sf
@@ -37,6 +38,24 @@ def read_ami(filename, d={}):
             mfcc = get_mfcc(dir)
             d[key].append(mfcc)
     return d
+
+def cut_ami(filename):
+    resfile = open(filename, 'r')
+    for line in resfile:
+        if "[" in line : 
+            info = get_info(line)
+            id = info[0]
+            s1 = id.find('.')
+            id = id[:s1]
+            dir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI/data/" + id + "/audio/" + id 
+            print dir
+            newdir = "/Users/justinkae/Documents/TensorflowPractice/FinderFolderFolder/FinderFolderData/AMI_cut/data/" + id + "/audio/" + id
+            t1 = info[1] - 20
+            t2 = info[2] + 20
+            newAudio = AudioSegment.from_wav(dir)
+            newAudio = newAudio[t1:t2]
+            newAudio.export(dir, format="wav")
+
 
 def read_res(filename, d={}):
     """ Returns dictionary representation of res file [filename] with [d]. """
@@ -102,16 +121,17 @@ def merge_dic(d, cmdlist):
     return new_dict
 
 def main():
-    dic = {}
-    dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
-    dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
-    dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
-    dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-    dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
-    dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
-    write_dict(dic, "./MFCCData_1/")
-    merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
-    write_dict(merged_dic, "./MFCCData_merged/")
+    # dic = {}
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
+    # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+    # write_dict(dic, "./MFCCData_1/")
+    cut_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt")
+    # merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
+    # write_dict(merged_dic, "./MFCCData_merged/")
     # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/smaller.npz")
 
 if __name__ == "__main__":
