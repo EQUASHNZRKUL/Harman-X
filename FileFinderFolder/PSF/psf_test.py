@@ -21,16 +21,11 @@ def get_info(infostr):
   return (id, st, et)
 
 def cut_ami(filename):
-  d = {}
   resfile = open(filename, 'r')
   key = None
   for line in resfile:
     if "[" in line : 
       key = line[1:-5]
-      try: 
-        d[key]
-      except KeyError:
-        d[key] = []
     elif (not "[" in line) and (not "]" in line):
       info = get_info(line)
       id = info[0]
@@ -42,10 +37,13 @@ ileFinderData/AMI/Arrays/Array1-01/" + id + "/audio/" + id + ".Array1-01.wav"
       cmd1 = "mkdir /Users/justinkae/Documents/TensorFlowPractice/FileFinderFol\
 der/FileFinderData/AMI_cut/Arrays/Array1-01/" + id
       os.system(cmd1)
-      cmd2 = cmd1 + "/audio/"
+      cmd2 = cmd1 + "/" + key
       os.system(cmd2)
+      i = len(os.listdir("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFol\
+der/FileFinderData/AMI_cut/Arrays/Array1-01/" + id)) - 1
       newdir = "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder\
-/FileFinderData/AMI_cut/Arrays/Array1-01/" + id + "/audio/" + id + ".Array1-01.wav"
+/FileFinderData/AMI_cut/Arrays/Array1-01/" + id + "/" + key + "/" + id + ".file\
+" + i + ".wav"
       t1 = info[1]*1000 - 50
       t2 = info[2]*1000 + 50
       newAudio = AudioSegment.from_wav(dir)
