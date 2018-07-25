@@ -163,16 +163,16 @@ def pad_dict(d, maxlen):
 def main():
   m = 0
   dic = {}
-  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic, m)
-  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic, m)
-  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic, m)
-  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic, m)
-  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic, m)
+  dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic, m)
+  dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic, m)
+  dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic, m)
+  dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic, m)
+  dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic, m)
   dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/cut_ami_results.txt", dic, m)
   pad_dict(dic, m)
-  print dic
-  # dlen(dic)
-  # write_dict(dic, "./MFCCData_1/")
+  # print dic
+  dlen(dic)
+  # write_dict(dic, "./MFCCData/")
   # cut_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/metadata.ami_results.txt")
   # merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
   # write_dict(merged_dic, "./MFCCData_merged/")
