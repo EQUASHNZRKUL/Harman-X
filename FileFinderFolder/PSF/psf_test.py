@@ -107,7 +107,7 @@ def get_mfcc(wavfile):
   mfcc_feat = mfcc(sig,rate)
   d_mfcc_feat = delta(mfcc_feat, 2)
   fbank_feat = logfbank(sig,rate)
-  return d_mfcc_feat
+  return np.append(d_mfcc_feat, np.full((d_mfcc_feat.shape[0], 1), 0), axis=1)
 
 def write_dict(d, directory):
   """ Writes dictionary of np arrays into a folder [d] """
@@ -169,10 +169,10 @@ def main():
   dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic, m)
   dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic, m)
   dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/cut_ami_results.txt", dic, m)
+  # print m
   pad_dict(dic, m)
-  # print dic
-  dlen(dic)
-  # write_dict(dic, "./MFCCData/")
+  # dlen(dic)
+  write_dict(dic, "./MFCCData/")
   # cut_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/metadata.ami_results.txt")
   # merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
   # write_dict(merged_dic, "./MFCCData_merged/")
