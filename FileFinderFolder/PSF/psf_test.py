@@ -22,10 +22,13 @@ def get_info(infostr):
 
 def cut_ami(filename):
   resfile = open(filename, 'r')
+  os.system("rm ../results/cut_ami_results.txt")
+  f = open("../results/cut_ami_results.txt", "a")
   key = None
   for line in resfile:
     if "[" in line : 
       key = line[1:-5]
+      f.write(line)
     elif (not "[" in line) and (not "]" in line):
       info = get_info(line)
       id = info[0]
@@ -49,6 +52,7 @@ der/FileFinderData/AMI_cut/Arrays/Array1-01/" + id + "/" + key))
       newAudio = AudioSegment.from_wav(dir)
       newAudio = newAudio[t1:t2]
       newAudio.export(newdir, format="wav")
+      f.write("        " + newdir + ", \n")
 
 def read_ami(filename, d={}):
   """ Returns dictionary representation of ami res file [filename] with [d]. """
@@ -73,7 +77,7 @@ ileFinderData/AMI/Arrays/Array1-01/" + id + "/audio/" + id + ".Array1-01.wav"
       d[key].append(mfcc)
   return d
 
-def read_res(filename, d={}):
+def read_res(filename, d={}, maxlength=0):
   """ Returns dictionary representation of res file [filename] with [d]. """
   resfile = open(filename, 'r')
   key = None
@@ -88,8 +92,9 @@ def read_res(filename, d={}):
       dir = line.strip()[:-1]
       print dir
       mfcc = get_mfcc(dir)
+      maxlength = max(maxlength, mfcc.shape[0])
       (d[key]).append(mfcc) #fuck this line
-  return d
+  return d,maxlength
 
 def get_mfcc(wavfile):
   """ Returns the 13 MFCC values of [wavfile]. Can process .flac as well"""
@@ -136,16 +141,39 @@ def merge_dic(d, cmdlist):
           new_dict[cmd] = v
   return new_dict
 
+def pad_dict(d, maxlen):
+  for k,v in d.iteritems():
+    new_v = []
+    for arr in v:
+      shape = arr.shape
+      pad = maxlen - shape[0]
+      arr = np.pad(arr, ((0, pad),(0, 0)), 'constant', constant_values = (0))
+      new_v.append(arr)
+    d[k] = np.array(new_v)
+
+# newsample = []
+# for wav in sample:
+#   shape = len(wav)
+#   pad = 3 - shape
+#   wav = np.pad(wav, ((0, pad),(0, 0)), 'constant', constant_values = (0))
+#   newsample.append(wav)
+# print np.array(newsample)
+
+
 def main():
-  # dic = {}
-  # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic)
-  # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic)
-  # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic)
-  # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic)
-  # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic)
-  # dic = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/ami_results.txt", dic)
+  m = 0
+  dic = {}
+  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/libri_results.txt", dic, m)
+  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/surf_results.txt", dic, m)
+  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vox_results.txt", dic, m)
+  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/vy_results.txt", dic, m)
+  # dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/wsj_results.txt", dic, m)
+  dic,m = read_res("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/cut_ami_results.txt", dic, m)
+  pad_dict(dic, m)
+  print dic
+  # dlen(dic)
   # write_dict(dic, "./MFCCData_1/")
-  cut_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/metadata.ami_results.txt")
+  # cut_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/metadata.ami_results.txt")
   # merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
   # write_dict(merged_dic, "./MFCCData_merged/")
   # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/smaller.npz")
