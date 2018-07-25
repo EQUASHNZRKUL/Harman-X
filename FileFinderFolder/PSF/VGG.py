@@ -41,9 +41,9 @@ class VGG:
 
   def conv_layer(self, input, name):
     with tf.variable_scope(name):
-      filter = self.get_conv_filter(name)
+      filt = self._get_conv_filter(name)
       conv = tf.nn.conv2d(input, filt, [1,1,1,1], padding='SAME')
-      conv_bias = self.get_bias(name)
+      conv_bias = self._get_bias(name)
       bias = tf.nn.bias_add(conv, conv_bias)
       relu = tf.nn.relu(bias)
       return relu
@@ -55,8 +55,8 @@ class VGG:
       for d in shape[1:]:
         dim = dim * d
       x = tf.reshape(input, [-1, dim])
-      weight = self.get_fc_weight(name)
-      bias = self.get_bias(name)
+      weight = self._get_fc_weight(name)
+      bias = self._get_bias(name)
       fc = tf.nn.bias_add(tf.matmul(x, weight), bias)
       return fc
 
