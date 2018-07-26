@@ -1,16 +1,19 @@
 import numpy as np 
 import math
 import tensorflow as tf 
-import layers as l
-import tf.nn
-import os
+import tensorflow.layers as l
+import tensorflow.nn
+from os import listdir
+
+from tensorflow.contrib import layers
+from tensorflow.contrib.framework.python.ops import arg_scope
 
 class VGG:
   def __init__(self, dir):
     self.datadict = {}
-    for filename in os.listdir(dir):
-      if filename.find(".DS_Store") != -1: 
-        dic = np.load(filename)
+    for filename in listdir(dir):
+      if filename.find(".DS_Store") == -1: 
+        dic = np.load(dir + "/" + filename)
         v = dic["arr_0"]
         key = filename[:-4]
         self.datadict[key] = []
@@ -18,18 +21,18 @@ class VGG:
           self.datadict[key].append(elt)
 
   def build(self, input):
-    self.conv3_1 = self.conv_layer(input, "conv3_1")
+    self.conv3_1 = self.conv_layer(input, 64, "conv3_1")
     self.mpool_1 = self.max_pool(self.conv3_1, "mpool_1")
 
     self.conv3_2 = self.conv_layer(self.mpool_1, "conv3_2")
-    self.conv3_3 = self.conv_layer(self.conv3_2, "conv3_3")
-    self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
+    self.conv3_3 = self.conv_layer(self.conv3_2, 512, "conv3_3")
+    self.mpool_2 = self.max_pool(self.conv3_3, 4096, "mpool_2")
 
     self.fc_1 = self.fc_layer(self.mpool_2, "fc_1")
     self.fc_2 = self.fc_layer(self.fc_1, "fc_2")
     self.fc_3 = self.fc_layer(self.fc_2, "fc_3")
 
-    self.output = tf.nn.softmax(self.fc_3, name="output")
+    self.logits = tf.nn.softmax(self.fc_3, name="logits")
 
     self.data_dict = None
 
@@ -39,7 +42,16 @@ class VGG:
   def max_pool(self, input, name):
     return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'SAME', name=name)
 
-  def conv_layer(self, input, name):
+  def max_layer(self, input, name):
+    return l.max_pooling2d(inputs=input, pool_size=[2,2], strides=2, name=name)
+
+  def conv_layer(self, input, filters, name):
+    # might get issue with this line later: 
+    # ValueError: Negative dimension size caused by subtracting 3 from 1 for 
+    # 'conv2d/Conv2D' (op: 'Conv2D') with input shapes: [14,1568,1,1], [3,3,1,64].
+    return l.conv2d(input, filters, [3,3], activation=tf.nn.relu) 
+
+  def conv_node(self, input, name):
     with tf.variable_scope(name):
       filt = self._get_conv_filter(name)
       conv = tf.nn.conv2d(input, filt, [1,1,1,1], padding='SAME')
