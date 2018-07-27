@@ -1,23 +1,27 @@
 import numpy as np 
 import math
 import tensorflow as tf 
-import layers as l
-import tf.nn
+import tensorflow.layers as l
+import tensorflow.nn
 import os
 
 from random import shuffle
 
 class VGG:
-  def __init__(self, dir):
-    self.datadict = {}
-    datadict = np.load(dir)
-    self.mapping = datadict.keys()
-    i = 0
+  def __init__(self, dir=None):
+    if dir is None:
+      self.datadict = {}
+    else:
+      self.datadict = {}
+      datadict = np.load(dir)
+      self.mapping = datadict.keys()
+      i = 0
 
-    # need to translate keys into ints and store a mapping
-    # this is necessary now because they will be randomized later
-    for _, v in datadict.iteritems():
-      self.datadict[i] = v
+      # need to translate keys into ints and store a mapping
+      # this is necessary now because they will be randomized later
+      for _, v in datadict.iteritems():
+        self.datadict[i] = v
+        i += 1
 
   def _variable_on_cpu(self, name, shape, initializer):
     """Helper to create a Variable stored on CPU memory.
@@ -161,8 +165,17 @@ class VGG:
 
     return data, labels
 
-  # def loss(self, logits, labels):
-    
+  def loss(self, logits, labels):
+    labels = tf.cast(labels, tf.int64)
 
-  # def train_step(self, loss, step)
-  #   # TODO: train function
+    # Backpropagation sort of thing? TODO: read up on cross_entropy
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
+      labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
+    cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
+    tf.add_to_collection('losses', cross_entropy_mean)
+
+    # total loss = cross_entropy plus all weight decay terms. 
+    return tf.add_n(tf.get_collection('losses'), name='total_loss')
+
+  def train_step(self, loss, step)
+    # TODO: train function
