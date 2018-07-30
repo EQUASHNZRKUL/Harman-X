@@ -26,7 +26,8 @@ class VGG:
       self.datadict = {}
       name = _get_filename(dir)
       datadict = np.load(dir)
-      self.mapping = datadict.keys()
+      self.size = len(datadict)
+      self.mapping = set(datadict.keys())
       i = 0
 
       # need to translate keys into ints and store a mapping
@@ -79,9 +80,14 @@ class VGG:
       already exist in the datadict. 
     """
     d = np.load(dir)
+
+    # Adjusting metadata
+    self.size += len(d)
+    self.mapping | set(d.keys())
+
+    # Loading data into object
     name = _get_filename(dir)
     self.datadict[name] = d
-
 
   def _variable_on_cpu(self, name, shape, initializer):
     """Helper to create a Variable stored on CPU memory.
