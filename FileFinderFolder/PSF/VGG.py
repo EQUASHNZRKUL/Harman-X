@@ -15,6 +15,11 @@ INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
 
 class VGG:
   def __init__(self, dir=None):
+    """ Instantiates a VGG object, which holds the data and any metadata of the 
+    VGG Neural Network. 
+    Requires:
+    - [dir]: is a valid directory of an .npz file
+    """
     if dir is None:
       self.datadict = {}
     else:
@@ -28,6 +33,15 @@ class VGG:
       for _, v in datadict.iteritems():
         self.datadict[i] = v
         i += 1
+      self.datadict = {}
+
+  def _get_filename(dir):
+    """ [_get_filename: (str -> str)] is the name of the file found at [dir] 
+    e.g.) '/Users/justinkae/.../train.npz' -> 'train'
+    """
+    k = dir.rfind('.')
+    h = dir.rfind('/')
+    return dir[h+1:k]
 
   def split(self, biasdict):
     # Unrolls the biasedlist & wipes the biasdict
@@ -83,6 +97,8 @@ class VGG:
     return var
 
   def build(self, input):
+    """ [build] constructs the Neural Network structure with TensorFlow. 
+    """
     # Layer 1:
     self.conv3_1 = self.conv_node(input, 3, 64, "conv3_1")
     self.mpool_1 = self.max_pool(self.conv3_1, "mpool_1")
@@ -205,7 +221,7 @@ class VGG:
   # TODO: Need both the training and eval data in the object at the same time
   def train_step(self, dataset, loss, step)
     # Collect variables that affect learning rate
-    data_count = len(dataset)
+    data_count = len(self.datadict['train'])
     class_count = len(self.mapping)
     num_batches_per_epoch = data_count / class_count 
 
