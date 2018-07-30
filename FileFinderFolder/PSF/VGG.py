@@ -24,6 +24,20 @@ tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
 tf.app.flags.DEFINE_boolean('use_fp16', False,
                             """Train the model using fp16.""")
 
+def _get_filename(dir):
+  """ [_get_filename: (str -> str)] is the name of the file found at [dir] 
+  e.g.) '/Users/justinkae/.../train.npz' -> 'train'
+  """
+  k = dir.rfind('.')
+  h = dir.rfind('/')
+  return dir[h+1:k]
+
+def _dict_length(d):
+  l = 0
+  for _, v in d.iteritems():
+    l += len(v)
+  return l
+
 class VGG:
   def __init__(self, dir=None):
     """ Instantiates a VGG object, which holds the data and any metadata of the 
@@ -37,23 +51,20 @@ class VGG:
       self.datadict = {}
       name = _get_filename(dir)
       datadict = np.load(dir)
-      self.size = len(datadict)
+      self.size = _dict_length(datadict)
       self.mapping = set(datadict.keys())
       i = 0
 
       # need to translate keys into ints and store a mapping
       # this is necessary now because they will be randomized later
       for _, v in datadict.iteritems():
-        self.datadict[name][i] = v
+        try:
+          self.datadict[name][i] = v
+        except KeyError:
+          name_dict = {}
+          name_dict[i] = v
+          self.datadict[name] = name_dict
         i += 1
-
-  def _get_filename(dir):
-    """ [_get_filename: (str -> str)] is the name of the file found at [dir] 
-    e.g.) '/Users/justinkae/.../train.npz' -> 'train'
-    """
-    k = dir.rfind('.')
-    h = dir.rfind('/')
-    return dir[h+1:k]
 
   def split(self, biasdict):
     """ [split] splits up self.datadict into separate dictionaries weighted
