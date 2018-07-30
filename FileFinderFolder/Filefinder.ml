@@ -191,7 +191,7 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
     Printf.fprintf channel "%s" str
   
   (** [print_result dict] prints the assoc_list representation of [dict]. *)
-  let print_result channel dict = 
+  let print_result channel dict = (*TODO: convert to working json writer*)
     let f k v acc = 
       Printf.fprintf channel "\"%s\": [\n" k; 
       let acc = print_value channel v in

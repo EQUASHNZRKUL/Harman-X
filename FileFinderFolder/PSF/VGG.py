@@ -5,7 +5,13 @@ import tensorflow.layers as l
 import tensorflow.nn
 import os
 
-from random import shuffle
+from random import seed, choice, shuffle
+
+# GLOBALS
+MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average.
+NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays.
+LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
+INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
 
 class VGG:
   def __init__(self, dir=None):
@@ -22,6 +28,25 @@ class VGG:
       for _, v in datadict.iteritems():
         self.datadict[i] = v
         i += 1
+
+  def split(self, biasdict):
+    # Unrolls the biasedlist & wipes the biasdict
+    seed(1)
+    biasedlist = []
+    for k, v in biasdict.iteritems():
+      biasedlist = biasedlist + [k] * v
+      biasdict[k] = {}
+
+    # Reveals the [d] master dict & processes categorization 
+    d = np.load(src_dir)
+    for cmd, mfcc_array in d.iteritems():
+      for mfcc in mfcc_array:
+        classification = choice(biasedlist)
+        try:
+          biasdict[classification][cmd] = np.append(biasdict[classification][cmd], [mfcc], axis=0)
+        except KeyError:
+          biasdict[classification][cmd] = np.array([mfcc])
+    # TODO: split datadict into separate categories (test or train)
 
   def _variable_on_cpu(self, name, shape, initializer):
     """Helper to create a Variable stored on CPU memory.
@@ -177,5 +202,18 @@ class VGG:
     # total loss = cross_entropy plus all weight decay terms. 
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
-  def train_step(self, loss, step)
-    # TODO: train function
+  # TODO: Need both the training and eval data in the object at the same time
+  def train_step(self, dataset, loss, step)
+    # Collect variables that affect learning rate
+    data_count = len(dataset)
+    class_count = len(self.mapping)
+    num_batches_per_epoch = data_count / class_count 
+
+    decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
+    # Decay the learning rate exponentially based on the number of steps.
+    # Generate moving averages of all losses and associated summaries
+    # Compute gradients
+    # Apply gradients
+    # Add histograms (optional)
+    # Track moving averages of all trainable variables
+    # return average variable operation 
