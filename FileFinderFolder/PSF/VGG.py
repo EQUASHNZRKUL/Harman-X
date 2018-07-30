@@ -104,7 +104,7 @@ class VGG:
     d = np.load(dir)
 
     # Adjusting metadata
-    self.size += len(d)
+    self.size += _dict_length(d)
     self.mapping | set(d.keys())
 
     # Loading data into object
