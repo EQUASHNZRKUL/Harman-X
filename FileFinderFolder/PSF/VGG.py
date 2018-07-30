@@ -24,6 +24,7 @@ class VGG:
       self.datadict = {}
     else:
       self.datadict = {}
+      name = _get_filename(dir)
       datadict = np.load(dir)
       self.mapping = datadict.keys()
       i = 0
@@ -31,9 +32,8 @@ class VGG:
       # need to translate keys into ints and store a mapping
       # this is necessary now because they will be randomized later
       for _, v in datadict.iteritems():
-        self.datadict[i] = v
+        self.datadict[name][i] = v
         i += 1
-      self.datadict = {}
 
   def _get_filename(dir):
     """ [_get_filename: (str -> str)] is the name of the file found at [dir] 
@@ -44,6 +44,14 @@ class VGG:
     return dir[h+1:k]
 
   def split(self, biasdict):
+    """ [split] splits up self.datadict into separate dictionaries weighted
+      according to [biasdict].
+    Requires:
+    - [self.datadict]: Has only one key. 
+    - [biasdict]: keys are the titles of the categories (must contain 'train')
+      & values are weights of the categories. e.g. {train:1, test:9} would mean
+      1/10 prob each datapoint is categorized as 'train', and 9/10 for 'test'.
+    """
     # Unrolls the biasedlist & wipes the biasdict
     seed(1)
     biasedlist = []
@@ -52,7 +60,7 @@ class VGG:
       biasdict[k] = {}
 
     # Reveals the [d] master dict & processes categorization 
-    d = np.load(src_dir)
+    d = self.datadict[self.datadict.keys()[0]]
     for cmd, mfcc_array in d.iteritems():
       for mfcc in mfcc_array:
         classification = choice(biasedlist)
@@ -60,7 +68,20 @@ class VGG:
           biasdict[classification][cmd] = np.append(biasdict[classification][cmd], [mfcc], axis=0)
         except KeyError:
           biasdict[classification][cmd] = np.array([mfcc])
-    # TODO: split datadict into separate categories (test or train)
+    
+    self.datadict = biasdict
+
+  def load_npz(self, dir):
+    """ [load_npz] stores the contents of an .npz file as a separate dataset 
+    into the object's datadict. 
+    Requires:
+    - [dir] is a valid directory of an .npz file, and the name of the file can't
+      already exist in the datadict. 
+    """
+    d = np.load(dir)
+    name = _get_filename(dir)
+    self.datadict[name] = d
+
 
   def _variable_on_cpu(self, name, shape, initializer):
     """Helper to create a Variable stored on CPU memory.
