@@ -12,6 +12,17 @@ MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average.
 NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays.
 LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
 INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
+BATCH_SIZE = 128
+
+FLAGS = tf.app.flags.FLAGS
+
+# Basic model parameters.
+tf.app.flags.DEFINE_integer('batch_size', 128,
+                            """Number of images to process in a batch.""")
+tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
+                           """Path to the CIFAR-10 data directory.""")
+tf.app.flags.DEFINE_boolean('use_fp16', False,
+                            """Train the model using fp16.""")
 
 class VGG:
   def __init__(self, dir=None):
@@ -206,7 +217,7 @@ class VGG:
 
   # TODO: TRANSLATE THE DICTIONARY INTO INPUTS
   def dic_to_inputs(self, dic):
-    """ Translates the data dictionary [dic] from the .npz file into a tf.Tensor
+    """ Translates the dataset [dic] from the .npz file into a tf.Tensor
     Returns: [inputs] 4D tensor of [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]
              [labels] 1D tensor of [BATCH_SIZE] """
     data = []
@@ -246,17 +257,52 @@ class VGG:
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
   # TODO: Need both the training and eval data in the object at the same time
-  def train_step(self, dataset, loss, step)
+  def train_step(self, dataset, total_loss, step):
+    """ Trains the model. 
+    Creates an optimizer and applies to all trainable variables. Adds moving avg
+    for trainable vars. 
+
+    Requires: 
+    - [total_loss]: Total loss calculated from [loss()].
+    - [global_step]: Integer Variables counting elapsed iterations of training steps. 
+
+    Returns:
+    - [trian_op]: training operation tensor. 
+    """
     # Collect variables that affect learning rate
     data_count = len(self.datadict['train'])
-    class_count = len(self.mapping)
+    class_count = len(self.mapping) # labels is 1D tensor of length batch_size
     num_batches_per_epoch = data_count / class_count 
 
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
+
     # Decay the learning rate exponentially based on the number of steps.
+    learning_rate = tf.train.exponential_decay(INITIAL_LEARNING_RATE, 
+      global_step, decay_steps, LEARNING_RATE_DECAY_FACTOR, staircase=True)
+    tf.summary.scalar('learning_rate', learning_rate) # Don't think necessary (TB think I think)
+
     # Generate moving averages of all losses and associated summaries
+    loss_avgs = tf.train.ExponentialMovingAverage(0.9, name='avg')
+    losses = tf.get_collection('losses')
+    loss_avgs_op = loss_avgs.apply(losses + [total_loss])
+    # Reference Code contains helper w/ Scalar Summary tensors (TB)
+
     # Compute gradients
+    with tf.control_dependencies([loss_avgs_op]):
+      opt = tf.train.GradientDescentOptimizer(learning_rate)
+      grads = opt.compute_gradients(total_loss)
+
     # Apply gradients
+    apply_grad_op = opt.apply_gradients(grads, global_step=global_step)
+
     # Add histograms (optional)
+
     # Track moving averages of all trainable variables
+    variable_avgs = tf.train.ExponentialMovingAverage(
+      MOVING_AVERAGE_DECAY, global_step)
+    with tf.control_dependencies([apply_gradient_op]):
+      variable_avgs_op = variable_avgs.apply(tf.trainable_variables())
+
+    return variable_avgs_op
+
     # return average variable operation 
