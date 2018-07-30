@@ -147,6 +147,10 @@ class VGG:
 
   def build(self, input):
     """ [build] constructs the Neural Network structure with TensorFlow. 
+    Requires:
+    - [input]: 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 1]
+    Returns:
+    - [logits]
     """
     # Layer 1:
     self.conv3_1 = self.conv_node(input, 3, 64, "conv3_1")
@@ -163,6 +167,8 @@ class VGG:
     self.fc_3 = self.conv_node(self.fc_2, 1, 1000, "fc_3")
 
     self.output = tf.nn.softmax(self.fc_3, name="output")
+
+    return self.output
 
     # self.data_dict = None
 
@@ -229,6 +235,8 @@ class VGG:
   # TODO: TRANSLATE THE DICTIONARY INTO INPUTS
   def dic_to_inputs(self, dic):
     """ Translates the dataset [dic] from the .npz file into a tf.Tensor
+    Requires:
+    - [dic]: is a dataset within the datadict.
     Returns: [inputs] 4D tensor of [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]
              [labels] 1D tensor of [BATCH_SIZE] """
     data = []
@@ -268,7 +276,7 @@ class VGG:
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
   # TODO: Need both the training and eval data in the object at the same time
-  def train_step(self, dataset, total_loss, step):
+  def train(self, total_loss, global_step):
     """ Trains the model. 
     Creates an optimizer and applies to all trainable variables. Adds moving avg
     for trainable vars. 
@@ -281,7 +289,7 @@ class VGG:
     - [trian_op]: training operation tensor. 
     """
     # Collect variables that affect learning rate
-    data_count = len(self.datadict['train'])
+    data_count = _dict_length(self.datadict['train'])
     class_count = len(self.mapping) # labels is 1D tensor of length batch_size
     num_batches_per_epoch = data_count / class_count 
 
