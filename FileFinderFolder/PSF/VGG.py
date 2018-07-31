@@ -165,7 +165,6 @@ class VGG:
 
     # Reshape Layer:
     length = self.mpool_2.get_shape().as_list()[0]
-    print length
     self.resize = self.reshape_node(self.mpool_2, length, "resize")
 
     # FC Layers:
@@ -173,13 +172,7 @@ class VGG:
     self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
     self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_3")
 
-    # self.fc_1 = self.conv_node(self.mpool_2, 1, 4096, "fc_1")
-    # self.fc_2 = self.conv_node(self.fc_1, 1, 4096, "fc_2")
-    # self.fc_3 = self.conv_node(self.fc_2, 1, 1000, "fc_3")
-
     self.output = self.output_layer(self.fc_3, name="output")
-
-    # self.output = tf.nn.softmax(self.fc_3, name="output")
 
     return self.output
 
@@ -362,7 +355,7 @@ class VGG:
     # Track moving averages of all trainable variables
     variable_avgs = tf.train.ExponentialMovingAverage(
       MOVING_AVERAGE_DECAY, global_step)
-    with tf.control_dependencies([apply_gradient_op]):
+    with tf.control_dependencies([apply_grad_op]):
       variable_avgs_op = variable_avgs.apply(tf.trainable_variables())
 
     return variable_avgs_op
