@@ -194,7 +194,7 @@ class VGG:
     with tf.variable_scope(name) as scope:
       print input.name + ": " + str(input.shape)
       in_dim = input.shape[3]
-      kernel = self._variable_with_weight_decay('weights', shape=[size, size, in_dim, filters])
+      kernel = self._variable_with_weight_decay('weight', shape=[size, size, in_dim, filters])
       # print in_dim
       conv = tf.nn.conv2d(input, kernel, [1,1,1,1], padding='SAME')
       biases = self._variable_on_cpu('biases', [filters], tf.constant_initializer(0.0))
@@ -257,9 +257,12 @@ class VGG:
       labels.append(cmd)
     
     # Convert into tensors
-    data = np.array(data)
-    data = tf.constant(data, dtype=tf.float32, name='inputs')
-    data = tf.expand_dims(data, 3)
+    raw_data = np.array(data)
+    raw_data = tf.constant(raw_data, dtype=tf.float32, name='inputs')
+    print raw_data
+    data = tf.expand_dims(raw_data, 3)
+    print data
+    # data = tf.constant(data, dtype=tf.float32, name='inputs')
     labels = np.array(labels)
     labels = tf.constant(labels, name='labels')
 
