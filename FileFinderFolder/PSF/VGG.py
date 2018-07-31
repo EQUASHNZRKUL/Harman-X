@@ -171,13 +171,15 @@ class VGG:
     # Reshape Layer:
     with tf.variable_scope('reshape') as scope:
       # Convert to a 2D array (layers of lists) so we can perform a single matr*
-      self.reshape = tf.reshape(input, [4096, -1])
+      length = self.fc_1.get_shape().as_list()[0]
+      self.reshape = tf.reshape(input, [length, -1])
       dim = self.reshape.get_shape()[1].value
       print dim
 
     # FC Layers:
-    self.fc_1 = self.local_layer(self.reshape)
-
+    self.fc_1 = self.local_layer(self.reshape, 4096, "fc_1")
+    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
+    self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_2")
 
     # self.fc_1 = self.conv_node(self.mpool_2, 1, 4096, "fc_1")
     # self.fc_2 = self.conv_node(self.fc_1, 1, 4096, "fc_2")
@@ -219,21 +221,24 @@ class VGG:
   
   def local_layer(self, input, length, name):
     with tf.variable_scope('local1') as scope:
-      # Convert to a 2D array (layers of lists) so we can perform a single matr*
-      reshape = tf.reshape(input, [length, -1])
+      dim = input.get_shape()[1].value
+      weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
+                stddev=0.04)
+      biases = self._variable_on_cpu('biases', [length], tf.constant_initializer(0.1))
+      local = tf.nn.relu(tf.matmul(reshape, weights) + biases, name=scope.name)
+      return local
       
-      
-  def fc_layer(self, input, name):
-    with tf.variable_scope(name):
-      shape = input.get_shape().as_list()
-      dim = 1
-      for d in shape[1:]:
-        dim = dim * d
-      x = tf.reshape(input, [-1, dim])
-      weight = self._get_fc_weight(name)
-      bias = self._get_bias(name)
-      fc = tf.nn.bias_add(tf.matmul(x, weight), bias)
-      return fc
+  # def fc_layer(self, input, name):
+  #   with tf.variable_scope(name):
+  #     shape = input.get_shape().as_list()
+  #     dim = 1
+  #     for d in shape[1:]:
+  #       dim = dim * d
+  #     x = tf.reshape(input, [-1, dim])
+  #     weight = self._get_fc_weight(name)
+  #     bias = self._get_bias(name)
+  #     fc = tf.nn.bias_add(tf.matmul(x, weight), bias)
+  #     return fc
 
   def load_file(self, npz):
     key = npz[:-4]
