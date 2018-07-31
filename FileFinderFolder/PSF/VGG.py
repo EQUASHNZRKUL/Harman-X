@@ -60,20 +60,18 @@ class VGG:
       for k, v in datadict.iteritems():
         try:
           self.datadict[name][i] = v
-          self.mapping[name][k] = i 
+          self.mapping[k] = i 
         except KeyError:
           name_dict = {}
           name_dict[i] = v
           self.datadict[name] = name_dict
-          map_dict = {}
-          map_dict[k] = i
-          self.mapping[name] = map_dict
         i += 1
 
   def split(self, biasdict):
     """ [split] splits up self.datadict into separate dictionaries weighted
       according to [biasdict].
     Requires:
+    - [self]: split() has not been called on this object yet. 
     - [self.datadict]: Has only one key. 
     - [biasdict]: keys are the titles of the categories (must contain 'train')
       & values are weights of the categories. e.g. {train:1, test:9} would mean
@@ -95,7 +93,7 @@ class VGG:
           biasdict[classification][cmd] = np.append(biasdict[classification][cmd], [mfcc], axis=0)
         except KeyError:
           biasdict[classification][cmd] = np.array([mfcc])
-    
+
     self.datadict = biasdict
 
   def load_npz(self, dir):
