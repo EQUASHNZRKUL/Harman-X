@@ -45,25 +45,29 @@ class VGG:
     Requires:
     - [dir]: is a valid directory of an .npz file
     """
-    if dir is None:
+    self.datadict = {}
+    self.mapping = {}
+    if dir is not None:
       self.datadict = {}
-    else:
-      self.datadict = {}
+      self.mapping = {}
       name = _get_filename(dir)
       datadict = np.load(dir)
       self.size = _dict_length(datadict)
-      self.mapping = set(datadict.keys())
       i = 0
 
       # need to translate keys into ints and store a mapping
       # this is necessary now because they will be randomized later
-      for _, v in datadict.iteritems():
+      for k, v in datadict.iteritems():
         try:
           self.datadict[name][i] = v
+          self.mapping[name][k] = i 
         except KeyError:
           name_dict = {}
           name_dict[i] = v
           self.datadict[name] = name_dict
+          map_dict = {}
+          map_dict[k] = i
+          self.mapping[name] = map_dict
         i += 1
 
   def split(self, biasdict):
