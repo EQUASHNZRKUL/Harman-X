@@ -163,23 +163,15 @@ class VGG:
     self.conv3_3 = self.conv_node(self.conv3_2, 3, 4096, "conv3_3")
     self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
 
-    # Final Layer:
-    self.fc_1 = self.local_layer(self.mpool_2, 4096, "fc_1")
-    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
-    self.fc_3 = self.local_layer(self.fc_1, 1000, "fc_2")
-
     # Reshape Layer:
-    with tf.variable_scope('reshape') as scope:
-      # Convert to a 2D array (layers of lists) so we can perform a single matr*
-      length = self.fc_1.get_shape().as_list()[0]
-      self.reshape = tf.reshape(input, [length, -1])
-      dim = self.reshape.get_shape()[1].value
-      print dim
+    length = self.mpool_2.get_shape().as_list()[0]
+    print length
+    self.resize = self.reshape_node(self.mpool_2, length, "resize")
 
     # FC Layers:
     self.fc_1 = self.local_layer(self.reshape, 4096, "fc_1")
-    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
-    self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_2")
+    self.fc_2 = self.local_layer(self.fc_1, 2048, "fc_2")
+    self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_3")
 
     # self.fc_1 = self.conv_node(self.mpool_2, 1, 4096, "fc_1")
     # self.fc_2 = self.conv_node(self.fc_1, 1, 4096, "fc_2")
@@ -218,14 +210,21 @@ class VGG:
       pre_activation = tf.nn.bias_add(conv, biases)
       conv_1 = tf.nn.relu(pre_activation, name=scope.name)
       return conv_1
+
+  def reshape_node(self, input, length, name):
+    with tf.variable_scope(name) as scope:
+      # Convert to a 2D array (layers of lists) so we can perform a single matr*
+      self.reshape = tf.reshape(input, [length, -1])
+      dim = self.reshape.get_shape()[1].value
+      print dim
   
   def local_layer(self, input, length, name):
-    with tf.variable_scope('local1') as scope:
+    with tf.variable_scope(name) as scope:
       dim = input.get_shape()[1].value
       weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
                 stddev=0.04)
       biases = self._variable_on_cpu('biases', [length], tf.constant_initializer(0.1))
-      local = tf.nn.relu(tf.matmul(reshape, weights) + biases, name=scope.name)
+      local = tf.nn.relu(tf.matmul(input, weights) + biases, name=scope.name)
       return local
       
   # def fc_layer(self, input, name):
