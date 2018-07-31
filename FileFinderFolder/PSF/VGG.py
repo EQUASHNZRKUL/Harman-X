@@ -164,9 +164,24 @@ class VGG:
     self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
 
     # Final Layer:
-    self.fc_1 = self.conv_node(self.mpool_2, 1, 4096, "fc_1")
-    self.fc_2 = self.conv_node(self.fc_1, 1, 4096, "fc_2")
-    self.fc_3 = self.conv_node(self.fc_2, 1, 1000, "fc_3")
+    self.fc_1 = self.local_layer(self.mpool_2, 4096, "fc_1")
+    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
+    self.fc_3 = self.local_layer(self.fc_1, 1000, "fc_2")
+
+    # Reshape Layer:
+    with tf.variable_scope('reshape') as scope:
+      # Convert to a 2D array (layers of lists) so we can perform a single matr*
+      self.reshape = tf.reshape(input, [4096, -1])
+      dim = self.reshape.get_shape()[1].value
+      print dim
+
+    # FC Layers:
+    self.fc_1 = self.local_layer(self.reshape)
+
+
+    # self.fc_1 = self.conv_node(self.mpool_2, 1, 4096, "fc_1")
+    # self.fc_2 = self.conv_node(self.fc_1, 1, 4096, "fc_2")
+    # self.fc_3 = self.conv_node(self.fc_2, 1, 1000, "fc_3")
 
     self.output = tf.nn.softmax(self.fc_3, name="output")
 
@@ -175,11 +190,11 @@ class VGG:
     # self.data_dict = None
 
   def avg_pool(self, input, name):
-    return tf.nn.avg_pool(input, [1,2,2,1], [1,2,2,1], 'SAME', name=name)  
+    return tf.nn.avg_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)  
 
   def max_pool(self, input, name):
     print input.name + ": " + str(input.shape)
-    return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'SAME', name=name)
+    return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)
 
   def max_layer(self, input, name):
     return l.max_pooling2d(inputs=input, pool_size=[2,2], strides=2, name=name)
@@ -194,13 +209,19 @@ class VGG:
     with tf.variable_scope(name) as scope:
       print input.name + ": " + str(input.shape)
       in_dim = input.shape[3]
-      kernel = self._variable_with_weight_decay('weight', shape=[size, size, in_dim, filters])
+      kernel = self._variable_with_weight_decay('weights', shape=[size, size, in_dim, filters])
       # print in_dim
-      conv = tf.nn.conv2d(input, kernel, [1,1,1,1], padding='SAME')
+      conv = tf.nn.conv2d(input, kernel, [1,1,1,1], padding='VALID')
       biases = self._variable_on_cpu('biases', [filters], tf.constant_initializer(0.0))
       pre_activation = tf.nn.bias_add(conv, biases)
       conv_1 = tf.nn.relu(pre_activation, name=scope.name)
       return conv_1
+  
+  def local_layer(self, input, length, name):
+    with tf.variable_scope('local1') as scope:
+      # Convert to a 2D array (layers of lists) so we can perform a single matr*
+      reshape = tf.reshape(input, [length, -1])
+      
       
   def fc_layer(self, input, name):
     with tf.variable_scope(name):
