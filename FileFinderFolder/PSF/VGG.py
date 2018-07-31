@@ -208,6 +208,7 @@ class VGG:
 
   def reshape_node(self, input, length, name):
     with tf.variable_scope(name) as scope:
+      print input.name + ": " + str(input.shape)
       # Convert to a 2D array (layers of lists) so we can perform a single matr*
       self.reshape = tf.reshape(input, [length, -1])
       dim = self.reshape.get_shape()[1].value
@@ -215,6 +216,7 @@ class VGG:
   
   def local_layer(self, input, length, name):
     with tf.variable_scope(name) as scope:
+      print input.name + ": " + str(input.shape)
       dim = input.get_shape()[1].value
       weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
                 stddev=0.04)
