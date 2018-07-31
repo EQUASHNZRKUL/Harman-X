@@ -10,8 +10,9 @@ FileFinderFolder/PSF/MFCCData.zip
 metadata.ami_results.txt
 ResultSheet.xlsx
 FileFinderFolder/PSF/MFCCData_folder/
-FileFinderFolder/PSF/
+FileFinderFolder/PSF/summary
 FileFinderData/
 Filefinder.cmx
 Filefinder.cmi
 Filefinder.o
+*.pyc
