@@ -47,6 +47,7 @@ class VGG:
     """
     self.datadict = {}
     self.mapping = {}
+    self.batch_size = 0
     if dir is not None:
       self.datadict = {}
       self.mapping = {}
@@ -166,6 +167,9 @@ class VGG:
     # data = tf.constant(data, dtype=tf.float32, name='inputs')
     labels = np.array(labels)
     labels = tf.constant(labels, name='labels')
+
+    # Update batch_size field
+    self.batch_size = labels.size()[0]
 
     return data, labels
 
@@ -387,7 +391,7 @@ class VGG:
 
         # Instantiate the loop variables. 
         # TODO: translate FLAGS.checkpoint_dir, num_examples, batch_size
-        num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
+        num_iter = int(math.ceil(FLAGS.num_examples / self.batch_size))
         true_count = 0 # Counts #correct predictions
         total_sample_count = FLAGS.num_examples
         step = 0
@@ -395,7 +399,7 @@ class VGG:
         while step < num_iter and not coord.should_stop():
           predictions = sess.run([top_k_op])
           true_count += np.sum(predictions)
-          total_sample_count = num_iter * FLAGS.batch_size
+          total_sample_count = num_iter * self.batch_size
           step += 1
         
         # Post-processing: Compute precision @ 1
