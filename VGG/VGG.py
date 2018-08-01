@@ -18,10 +18,8 @@ FLAGS = tf.app.flags.FLAGS
 # Basic model parameters.
 tf.app.flags.DEFINE_integer('batch_size', 128,
                             """Number of images to process in a batch.""")
-tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
+tf.app.flags.DEFINE_string('data_dir', '../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz',
                            """Path to the CIFAR-10 data directory.""")
-tf.app.flags.DEFINE_boolean('use_fp16', False,
-                            """Train the model using fp16.""")
 
 def _get_filename(dir):
   """ [_get_filename: (str -> str)] is the name of the file found at [dir] 
@@ -47,6 +45,7 @@ class VGG:
     self.datadict = {}
     self.mapping = {}
     self.batch_size = 0
+    print tf.Graph()
     if dir is not None:
       self.datadict = {}
       self.mapping = {}
@@ -342,6 +341,11 @@ class VGG:
     apply_grad_op = opt.apply_gradients(grads, global_step=global_step)
 
     # Add histograms (optional)
+    for var in tf.trainable_variables():
+      tf.summary.histogram(var.op.name, var)
+    for grad, var in grads:
+      if grad is not None:
+        tf.summary.histogram(var.op.name + 'gradients', grad)
 
     # Track moving averages of all trainable variables
     variable_avgs = tf.train.ExponentialMovingAverage(
