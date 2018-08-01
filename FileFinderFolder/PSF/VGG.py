@@ -288,9 +288,6 @@ class VGG:
       softmax_linear = tf.add(tf.matmul(input, weights), biases, name=name)
       return softmax_linear
 
-  def _get_conv_filter(self, name):
-    return tf.constant(self.datadict[name][0], name="filter")
-
   def loss(self, logits, labels):
     """ Calculates the loss of the calculated [logit] values and true [labels]
     Returns: scalar representing the total loss. 
