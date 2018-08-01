@@ -58,5 +58,5 @@ with tf.Graph().as_default():
 print "TensorBoard section. "
 with tf.Session() as sess:
   writer = tf.summary.FileWriter('./summary')
-  writer.add_graph(tf.get_default_graph())
+  writer.add_graph(train_op.graph)
   writer.close
