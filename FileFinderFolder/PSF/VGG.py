@@ -179,24 +179,24 @@ class VGG:
     - [logits]
     """
     # Layer 1:
-    self.conv3_1 = self.conv_node(input, 3, 64, "conv3_1")
-    self.mpool_1 = self.max_pool(self.conv3_1, "mpool_1")
+    self.conv3_1 = self._conv_node(input, 3, 64, "conv3_1")
+    self.mpool_1 = self._max_pool(self.conv3_1, "mpool_1")
 
     # Layer 2:
-    self.conv3_2 = self.conv_node(self.mpool_1, 3, 512, "conv3_2")
-    self.conv3_3 = self.conv_node(self.conv3_2, 3, 4096, "conv3_3")
-    self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
+    self.conv3_2 = self._conv_node(self.mpool_1, 3, 512, "conv3_2")
+    self.conv3_3 = self._conv_node(self.conv3_2, 3, 4096, "conv3_3")
+    self.mpool_2 = self._max_pool(self.conv3_3, "mpool_2")
 
     # Reshape Layer:
     length = self.mpool_2.get_shape().as_list()[0]
-    self.resize = self.reshape_node(self.mpool_2, length, "resize")
+    self.resize = self._reshape_node(self.mpool_2, length, "resize")
 
     # FC Layers:
-    self.fc_1 = self.local_layer(self.reshape, 4096, "fc_1")
-    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
-    self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_3")
+    self.fc_1 = self._local_layer(self.reshape, 4096, "fc_1")
+    self.fc_2 = self._local_layer(self.fc_1, 4096, "fc_2")
+    self.fc_3 = self._local_layer(self.fc_2, 1000, "fc_3")
 
-    self.output = self.output_layer(self.fc_3, name="output")
+    self.output = self._output_layer(self.fc_3, name="output")
 
     return self.output
 
@@ -273,7 +273,7 @@ class VGG:
       local = tf.nn.relu(tf.matmul(input, weights) + biases, name=scope.name)
       return local
   
-  def output_layer(self, input, name):
+  def _output_layer(self, input, name):
     with tf.variable_scope('output') as scope:
       dim = input.get_shape()[1].value
       num_classes = len(self.mapping.keys())
@@ -359,39 +359,39 @@ class VGG:
 
     # return average variable operation 
   
-  def eval_step(self, saver, summary_writer, top_k_op, summary_op, ckpt_dir):
-    """ Runs eval once
+  # def eval_step(self, saver, summary_writer, top_k_op, summary_op, ckpt_dir):
+  #   """ Runs eval once
 
-    Requires:
-    - ckpt_dir: directory to store the checkpoints
-    """
-    with tf.Session() as sess:
-      ckpt = tf.train.get_checkpoint_state(ckpt_dir)
-      if ckpt and ckpt.model_checkpoint_path:
-        # Restores from checkpoint
-        saver.restore(sess, ckpt.model_checkpoint_path)
-        # Assuming model_checkpoint_path looks something like:
-        #   /my-favorite-path/cifar10_train/model.ckpt-0,
-        # extract global_step from it.
-        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-      else:
-        print('No checkpoint file found')
-        return
+  #   Requires:
+  #   - ckpt_dir: directory to store the checkpoints
+  #   """
+  #   with tf.Session() as sess:
+  #     ckpt = tf.train.get_checkpoint_state(ckpt_dir)
+  #     if ckpt and ckpt.model_checkpoint_path:
+  #       # Restores from checkpoint
+  #       saver.restore(sess, ckpt.model_checkpoint_path)
+  #       # Assuming model_checkpoint_path looks something like:
+  #       #   /my-favorite-path/cifar10_train/model.ckpt-0,
+  #       # extract global_step from it.
+  #       global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+  #     else:
+  #       print('No checkpoint file found')
+  #       return
 
-      # Start Queue Runners
-      coord = tf.train.Coordinators()
-      try:
-        threads = []
-        for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS): # worried about QR
-          threads.extend(qr.create_threads(sess, coord=coord, daemon=True, start=True))
+  #     # Start Queue Runners
+  #     coord = tf.train.Coordinators()
+  #     try:
+  #       threads = []
+  #       for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS): # worried about QR
+  #         threads.extend(qr.create_threads(sess, coord=coord, daemon=True, start=True))
 
-        # Instantiate the loop variables. 
-        # TODO: translate FLAGS.checkpoint_dir, num_examples, batch_size
-        num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
-        true_count = 0 # Counts #correct predictions
-        total_sample_count = FLAGS.num_examples
-        step = 0
+  #       # Instantiate the loop variables. 
+  #       # TODO: translate FLAGS.checkpoint_dir, num_examples, batch_size
+  #       num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
+  #       true_count = 0 # Counts #correct predictions
+  #       total_sample_count = FLAGS.num_examples
+  #       step = 0
 
-        while step < num_iter and not coord.should_stop():
-          predictions = sess.run([top_k_op])
-          true_count += np.sum(predictions)
+  #       while step < num_iter and not coord.should_stop():
+  #         predictions = sess.run([top_k_op])
+  #         true_count += np.sum(predictions)
