@@ -13,9 +13,12 @@ with tf.Graph().as_default():
   logits = vgg.build(data)
   loss = vgg.loss(logits, labels)
   train_op = vgg.train(loss, global_step)
+  print vgg.batch_size
 
 with tf.Session() as sess:
-  writer = tf.summary.FileWriter('./summary')
-  writer.add_graph(train_op.graph)
-  writer.close
+  print(sess.run(tf.report_uninitialized_variables()))
+
+  # writer = tf.summary.FileWriter('./summary')
+  # writer.add_graph(train_op.graph)
+  # writer.close
 

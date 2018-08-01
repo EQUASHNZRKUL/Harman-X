@@ -60,31 +60,31 @@ with tf.Graph().as_default():
 
   print train_op.graph
 
-  # LoggerHook:
-  class _LoggerHook(tf.train.SessionRunHook):
-    """Logs loss and runtime"""
-    def begin(self):
-      self._step = -1
-      self._start_time = time.time()
+  # # LoggerHook:
+  # class _LoggerHook(tf.train.SessionRunHook):
+  #   """Logs loss and runtime"""
+  #   def begin(self):
+  #     self._step = -1
+  #     self._start_time = time.time()
     
-    def before_run(self, run_context):
-      self._step += 1
-      return tf.train.SessionRunArgs(loss)
+  #   def before_run(self, run_context):
+  #     self._step += 1
+  #     return tf.train.SessionRunArgs(loss)
 
-    def after_run(self, run_context, run_values):
-      if self._step % LOG_FREQ == 0:
-        curr_time = time.time()
-        duration = curr_time - self._start_time
-        self._start_time = curr_time
+  #   def after_run(self, run_context, run_values):
+  #     if self._step % LOG_FREQ == 0:
+  #       curr_time = time.time()
+  #       duration = curr_time - self._start_time
+  #       self._start_time = curr_time
 
-        loss_value = run_values.results
-        examples_per_sec = LOG_FREQ * BATCH_SIZE / duration
-        sec_per_batch = float(duration / LOG_FREQ)
+  #       loss_value = run_values.results
+  #       examples_per_sec = LOG_FREQ * BATCH_SIZE / duration
+  #       sec_per_batch = float(duration / LOG_FREQ)
 
-        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-                        'sec/batch)')
-        print (format_str % (datetime.now(), self._step, loss_value,
-                               examples_per_sec, sec_per_batch))
+  #       format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+  #                       'sec/batch)')
+  #       print (format_str % (datetime.now(), self._step, loss_value,
+  #                              examples_per_sec, sec_per_batch))
 
 print "TensorBoard section. "
 with tf.Session() as sess:

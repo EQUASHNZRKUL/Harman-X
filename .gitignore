@@ -11,6 +11,7 @@ metadata.ami_results.txt
 ResultSheet.xlsx
 FileFinderFolder/PSF/MFCCData_folder/
 FileFinderFolder/PSF/summary
+VGG/summary
 FileFinderData/
 Filefinder.cmx
 Filefinder.cmi
