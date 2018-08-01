@@ -5,7 +5,20 @@ import time
 from datetime import datetime
 
 # GLOBALS:
-LOG_FREQ = 10
+
+# Basic model parameters.
+FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_string('data_dir', '/FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz',
+                           """Path to the CIFAR-10 data directory.""")
+tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
+                           """Directory where to write event logs """
+                           """and checkpoint.""")
+tf.app.flags.DEFINE_integer('log_frequency', 10,
+                            """How often to log results to the console.""")
+tf.app.flags.DEFINE_integer('batch_size', 128,
+                            """Number of images to process in a batch.""")
+tf.app.flags.DEFINE_integer('max_steps', 100000,
+                            """Number of batches to run.""")
 
 with tf.Graph().as_default():
   # print "1. vgg_p: (w/ Placeholder)"
@@ -60,34 +73,41 @@ with tf.Graph().as_default():
 
   print train_op.graph
 
-  # # LoggerHook:
-  # class _LoggerHook(tf.train.SessionRunHook):
-  #   """Logs loss and runtime"""
-  #   def begin(self):
-  #     self._step = -1
-  #     self._start_time = time.time()
+  # LoggerHook:
+  class _LoggerHook(tf.train.SessionRunHook):
+    """Logs loss and runtime"""
+    def begin(self):
+      self._step = -1
+      self._start_time = time.time()
     
-  #   def before_run(self, run_context):
-  #     self._step += 1
-  #     return tf.train.SessionRunArgs(loss)
+    def before_run(self, run_context):
+      self._step += 1
+      return tf.train.SessionRunArgs(loss)
 
-  #   def after_run(self, run_context, run_values):
-  #     if self._step % LOG_FREQ == 0:
-  #       curr_time = time.time()
-  #       duration = curr_time - self._start_time
-  #       self._start_time = curr_time
+    def after_run(self, run_context, run_values):
+      if self._step % LOG_FREQ == 0:
+        curr_time = time.time()
+        duration = curr_time - self._start_time
+        self._start_time = curr_time
 
-  #       loss_value = run_values.results
-  #       examples_per_sec = LOG_FREQ * BATCH_SIZE / duration
-  #       sec_per_batch = float(duration / LOG_FREQ)
+        loss_value = run_values.results
+        examples_per_sec = LOG_FREQ * BATCH_SIZE / duration
+        sec_per_batch = float(duration / LOG_FREQ)
 
-  #       format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-  #                       'sec/batch)')
-  #       print (format_str % (datetime.now(), self._step, loss_value,
-  #                              examples_per_sec, sec_per_batch))
+        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+                        'sec/batch)')
+        print (format_str % (datetime.now(), self._step, loss_value,
+                               examples_per_sec, sec_per_batch))
 
 print "TensorBoard section. "
-with tf.Session() as sess:
+with tf.train.MonitoredTrainingSession(
+  checkpoint_dir=FLAGS.train_dir,
+  hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
+    tf.train.NanTensorHook(loss), _LoggerHook()], 
+    config = tf.ConfigProto(
+      log_device_placement=FLAGS.log_device_placement)) as mon_sess:
   writer = tf.summary.FileWriter('./summary')
   writer.add_graph(train_op.graph)
   writer.close
+  while not mon_sess.should_stop():
+    mon_sess.run(train_op)
