@@ -66,6 +66,46 @@ class VGG:
           name_dict[i] = v
           self.datadict[name] = name_dict
         i += 1
+  
+  # -=- GETTERS & SETTERS -=-
+
+  def get_train_dict(self):
+    """ Returns the training dataset from the data dictionary. None if datadict
+    doesn't contain a 'train' key yet. """
+    try:
+      return self.datadict['train']
+    except KeyError:
+      return None
+
+  def load_npz(self, dir):
+    """ [load_npz] stores the contents of an .npz file as a separate dataset 
+    into the object's datadict. 
+    Requires:
+    - [dir] is a valid directory of an .npz file, and the name of the file can't
+      already exist in the datadict. 
+    """
+    d = np.load(dir)
+
+    # Adjusting metadata
+    self.size += _dict_length(d)
+    self.mapping | set(d.keys())
+
+    # Loading data into object
+    name = _get_filename(dir)
+    self.datadict[name] = d
+
+  # -=- HELPERS -=-
+
+  # def load_file(self, npz):
+  #   key = npz[:-4]
+  #   try:
+  #     val = self.datadict[key]
+  #   except KeyError:
+  #     val = []
+  #   dic = np.load(npz)
+  #   v = dic["arr_0"]
+  #   for elt in v:
+  #     self.datadict[key] = val.append(elt)
 
   def split(self, biasdict):
     """ [split] splits up self.datadict into separate dictionaries weighted
@@ -96,23 +136,71 @@ class VGG:
 
     self.datadict = biasdict
 
-  def load_npz(self, dir):
-    """ [load_npz] stores the contents of an .npz file as a separate dataset 
-    into the object's datadict. 
+  def dic_to_inputs(self, dic):
+    """ Translates the dataset [dic] from the .npz file into a tf.Tensor
     Requires:
-    - [dir] is a valid directory of an .npz file, and the name of the file can't
-      already exist in the datadict. 
+    - [dic]: is a dataset within the datadict.
+    Returns: [inputs] 4D tensor of [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]
+             [labels] 1D tensor of [BATCH_SIZE] """
+    data = []
+    labels = []
+    prep_assoc_list = []
+
+    # Randomize order of inputs:
+    for cmd, mfcc_list in dic.iteritems():
+      for mfcc in mfcc_list:
+        prep_assoc_list.append((cmd, mfcc))
+    shuffle(prep_assoc_list)
+
+    # Populate data & label lists
+    for (cmd, val) in prep_assoc_list:
+      data.append(val)
+      labels.append(cmd)
+    
+    # Convert into tensors
+    raw_data = np.array(data)
+    raw_data = tf.constant(raw_data, dtype=tf.float32, name='inputs')
+    print raw_data
+    data = tf.expand_dims(raw_data, 3)
+    print data
+    # data = tf.constant(data, dtype=tf.float32, name='inputs')
+    labels = np.array(labels)
+    labels = tf.constant(labels, name='labels')
+
+    return data, labels
+
+# -=- BIG BOY METHODS -=-
+
+  def build(self, input):
+    """ [build] constructs the Neural Network structure with TensorFlow. 
+    Requires:
+    - [input]: 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 1]
+    Returns:
+    - [logits]
     """
-    d = np.load(dir)
+    # Layer 1:
+    self.conv3_1 = self.conv_node(input, 3, 64, "conv3_1")
+    self.mpool_1 = self.max_pool(self.conv3_1, "mpool_1")
 
-    # Adjusting metadata
-    self.size += _dict_length(d)
-    self.mapping | set(d.keys())
+    # Layer 2:
+    self.conv3_2 = self.conv_node(self.mpool_1, 3, 512, "conv3_2")
+    self.conv3_3 = self.conv_node(self.conv3_2, 3, 4096, "conv3_3")
+    self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
 
-    # Loading data into object
-    name = _get_filename(dir)
-    self.datadict[name] = d
+    # Reshape Layer:
+    length = self.mpool_2.get_shape().as_list()[0]
+    self.resize = self.reshape_node(self.mpool_2, length, "resize")
 
+    # FC Layers:
+    self.fc_1 = self.local_layer(self.reshape, 4096, "fc_1")
+    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
+    self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_3")
+
+    self.output = self.output_layer(self.fc_3, name="output")
+
+    return self.output
+
+  # BUILD: VARIABLE PRODUCERS
   def _variable_on_cpu(self, name, shape, initializer):
     """Helper to create a Variable stored on CPU memory.
     Args:
@@ -147,54 +235,15 @@ class VGG:
         tf.truncated_normal_initializer(stddev=stddev, dtype=dtype))
     return var
 
-  def build(self, input):
-    """ [build] constructs the Neural Network structure with TensorFlow. 
-    Requires:
-    - [input]: 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 1]
-    Returns:
-    - [logits]
-    """
-    # Layer 1:
-    self.conv3_1 = self.conv_node(input, 3, 64, "conv3_1")
-    self.mpool_1 = self.max_pool(self.conv3_1, "mpool_1")
-
-    # Layer 2:
-    self.conv3_2 = self.conv_node(self.mpool_1, 3, 512, "conv3_2")
-    self.conv3_3 = self.conv_node(self.conv3_2, 3, 4096, "conv3_3")
-    self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
-
-    # Reshape Layer:
-    length = self.mpool_2.get_shape().as_list()[0]
-    self.resize = self.reshape_node(self.mpool_2, length, "resize")
-
-    # FC Layers:
-    self.fc_1 = self.local_layer(self.reshape, 4096, "fc_1")
-    self.fc_2 = self.local_layer(self.fc_1, 4096, "fc_2")
-    self.fc_3 = self.local_layer(self.fc_2, 1000, "fc_3")
-
-    self.output = self.output_layer(self.fc_3, name="output")
-
-    return self.output
-
-    # self.data_dict = None
-
-  def avg_pool(self, input, name):
+  # BUILD: LAYER PRODUCERS
+  def _avg_pool(self, input, name):
     return tf.nn.avg_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)  
 
-  def max_pool(self, input, name):
+  def _max_pool(self, input, name):
     print input.name + ": " + str(input.shape)
     return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)
 
-  def max_layer(self, input, name):
-    return l.max_pooling2d(inputs=input, pool_size=[2,2], strides=2, name=name)
-
-  def conv_layer(self, input, filters, name):
-    # TODO: might get issue with this line later: 
-    # ValueError: Negative dimension size caused by subtracting 3 from 1 for 
-    # 'conv2d/Conv2D' (op: 'Conv2D') with input shapes: [14,1568,1,1], [3,3,1,64].
-    return l.conv2d(input, filters, [3,3], [1,1], activation=tf.nn.relu) 
-
-  def conv_node(self, input, size, filters, name):
+  def _conv_node(self, input, size, filters, name):
     with tf.variable_scope(name) as scope:
       print input.name + ": " + str(input.shape)
       in_dim = input.shape[3]
@@ -206,7 +255,7 @@ class VGG:
       conv_1 = tf.nn.relu(pre_activation, name=scope.name)
       return conv_1
 
-  def reshape_node(self, input, length, name):
+  def _reshape_node(self, input, length, name):
     with tf.variable_scope(name) as scope:
       print input.name + ": " + str(input.shape)
       # Convert to a 2D array (layers of lists) so we can perform a single matr*
@@ -214,7 +263,7 @@ class VGG:
       dim = self.reshape.get_shape()[1].value
       print dim
   
-  def local_layer(self, input, length, name):
+  def _local_layer(self, input, length, name):
     with tf.variable_scope(name) as scope:
       print input.name + ": " + str(input.shape)
       dim = input.get_shape()[1].value
@@ -234,29 +283,6 @@ class VGG:
                 tf.constant_initializer(0.0))
       softmax_linear = tf.add(tf.matmul(input, weights), biases, name=name)
       return softmax_linear
-      
-  # def fc_layer(self, input, name):
-  #   with tf.variable_scope(name):
-  #     shape = input.get_shape().as_list()
-  #     dim = 1
-  #     for d in shape[1:]:
-  #       dim = dim * d
-  #     x = tf.reshape(input, [-1, dim])
-  #     weight = self._get_fc_weight(name)
-  #     bias = self._get_bias(name)
-  #     fc = tf.nn.bias_add(tf.matmul(x, weight), bias)
-  #     return fc
-
-  def load_file(self, npz):
-    key = npz[:-4]
-    try:
-      val = self.datadict[key]
-    except KeyError:
-      val = []
-    dic = np.load(npz)
-    v = dic["arr_0"]
-    for elt in v:
-      self.datadict[key] = val.append(elt)
 
   def _get_conv_filter(self, name):
     return tf.constant(self.datadict[name][0], name="filter")
@@ -266,40 +292,6 @@ class VGG:
 
   def _get_fc_weight(self, name):
     return tf.constant(self.data_dict[name][0], name="weight")
-
-  # TODO: TRANSLATE THE DICTIONARY INTO INPUTS
-  def dic_to_inputs(self, dic):
-    """ Translates the dataset [dic] from the .npz file into a tf.Tensor
-    Requires:
-    - [dic]: is a dataset within the datadict.
-    Returns: [inputs] 4D tensor of [BATCH_SIZE, IMAGE_SIZE, IMAGE_SIZE, 1]
-             [labels] 1D tensor of [BATCH_SIZE] """
-    data = []
-    labels = []
-    prep_assoc_list = []
-
-    # Randomize order of inputs:
-    for cmd, mfcc_list in dic.iteritems():
-      for mfcc in mfcc_list:
-        prep_assoc_list.append((cmd, mfcc))
-    shuffle(prep_assoc_list)
-
-    # Populate data & label lists
-    for (cmd, val) in prep_assoc_list:
-      data.append(val)
-      labels.append(cmd)
-    
-    # Convert into tensors
-    raw_data = np.array(data)
-    raw_data = tf.constant(raw_data, dtype=tf.float32, name='inputs')
-    print raw_data
-    data = tf.expand_dims(raw_data, 3)
-    print data
-    # data = tf.constant(data, dtype=tf.float32, name='inputs')
-    labels = np.array(labels)
-    labels = tf.constant(labels, name='labels')
-
-    return data, labels
 
   def loss(self, logits, labels):
     """ Calculates the loss of the calculated [logit] values and true [labels]
@@ -399,3 +391,7 @@ class VGG:
         true_count = 0 # Counts #correct predictions
         total_sample_count = FLAGS.num_examples
         step = 0
+
+        while step < num_iter and not coord.should_stop():
+          predictions = sess.run([top_k_op])
+          true_count += np.sum(predictions)
