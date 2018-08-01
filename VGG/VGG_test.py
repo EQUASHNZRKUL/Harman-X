@@ -76,10 +76,6 @@ with tf.Graph().as_default():
         print (format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
 
-  # with tf.Session() as sess:
-  #   sess.run(tf.global_variables_initializer())
-  #   print sess.run(tf.global_variables()) # -> []
-  #   print tf.Graph()
   print "train section. "
   with tf.train.MonitoredTrainingSession(
     checkpoint_dir=FLAGS.train_dir,
@@ -89,7 +85,7 @@ with tf.Graph().as_default():
 
     print "TensorBoard section. "
     writer = tf.summary.FileWriter('./summary')
-    writer.add_graph(tf.Graph())
+    writer.add_graph(train_op.graph)
     writer.close
 
     print "training... "
