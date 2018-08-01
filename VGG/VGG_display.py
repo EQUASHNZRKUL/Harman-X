@@ -1,7 +1,7 @@
 import VGG
 import tensorflow as tf
 
-vgg = VGG.VGG("./MFCCData_Folder/MFCCData.npz")
+vgg = VGG.VGG("./FileFinderFolder/PSF/MFCCData_Folder/MFCCData.npz")
 # vgg_m = VGG.VGG("./MFCCData_merged.npz")
 vgg.build(tf.placeholder(tf.float32, shape=(965, 1568, 14, 1)))
 

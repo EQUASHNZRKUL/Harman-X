@@ -1,12 +1,12 @@
 import VGG
 import tensorflow as tf
 
-vgg_train = VGG.VGG("./MFCCData_folder/MFCCData_split/train.npz")
+vgg_train = VGG.VGG("./FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
 
 with tf.Graph().as_default():
   global_step = tf.train.get_or_create_global_step()
 
-  vgg = VGG.VGG("./MFCCData_folder/MFCCData.npz")
+  vgg = VGG.VGG("./FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
   vgg.split({'train':6, 'test':4})
   data, labels = vgg.dic_to_inputs(vgg.datadict['train'])
 

@@ -13,7 +13,4 @@ FileFinderFolder/PSF/MFCCData_folder/
 FileFinderFolder/PSF/summary
 VGG/summary
 FileFinderData/
-Filefinder.cmx
-Filefinder.cmi
-Filefinder.o
 *.pyc

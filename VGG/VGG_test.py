@@ -9,7 +9,7 @@ LOG_FREQ = 10
 
 with tf.Graph().as_default():
   # print "1. vgg_p: (w/ Placeholder)"
-  # vgg_p = VGG.VGG("./MFCCData_folder/MFCCData.npz")
+  # vgg_p = VGG.VGG("./FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
   # vgg_p.build(tf.placeholder(tf.float32, shape=(995, 1586, 14, 1)))
 
   # print vgg_p.datadict.keys()
@@ -19,7 +19,7 @@ with tf.Graph().as_default():
   print "2. vgg_d: (w/ data)"
   # Data (need to check if this ever worked) (think it did, not entirely sure)
   print "3. instantiate: "
-  vgg_d = VGG.VGG("./MFCCData_folder/MFCCData.npz")
+  vgg_d = VGG.VGG("./FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
 
   # print vgg_d.datadict.keys()
   # print vgg_d.datadict['MFCCData'].keys()
