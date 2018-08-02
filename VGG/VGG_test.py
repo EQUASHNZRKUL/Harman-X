@@ -25,19 +25,31 @@ with tf.Graph().as_default() as g:
   # Get images and labels for CIFAR-10.
   # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
   # vgg.split({'train':6, 'test':4})
+  print "1) Instantiate: "
   vgg = VGG.VGG(FLAGS.eval_data)
   data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
+  print vgg.datadict
+  print data
+  print labels
 
   # Build Graph to compute logit predictions
+  print "2) Build graph"
   logits = vgg.build(data)
+  print logits
 
   # Calculate predictions
+  print "3) Get top_k_op"
   top_k_op = tf.nn.in_top_k(logits, labels, 1)
+  print top_k_op
 
   # Restore the moving average version of the learned vars for eval. 
-  variable_averages = tf.train.ExponentialMovingAverage(GG.MOVING_AVERAGE_DECAY)
+  print "Build variable averages"
+  variable_averages = tf.train.ExponentialMovingAverage(VGG.MOVING_AVERAGE_DECAY)
+  print variable_averages
   variables_to_restore = variable_averages.variables_to_restore()
+  print variables_to_restore
   saver = tf.train.Saver(variables_to_restore)
+  print saver
 
   # Build summary op based on collection of Summaries.
   # summary_op = tf.summary.merge_all()

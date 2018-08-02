@@ -3,11 +3,13 @@ import tensorflow as tf
 import numpy as np 
 from time import sleep
 
+# ../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('eval_dir', 'eval_logs/',
                            """Directory where to write event logs.""")
-tf.app.flags.DEFINE_string('eval_data', '../MFCCData_folder/MFCCData_split/test.npz',
+tf.app.flags.DEFINE_string('eval_data', '../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz',
                            """Either 'test' or 'train_eval'.""")
 tf.app.flags.DEFINE_string('checkpoint_dir', 'checkpoints/',
                            """Directory where to read model checkpoints.""")
@@ -72,8 +74,10 @@ with tf.Graph().as_default() as g:
   # Get images and labels for CIFAR-10.
   # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
   # vgg.split({'train':6, 'test':4})
-  vgg = VGG.VGG(FLAGS.eval_data)
+  vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+  print "78"
   data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
+  print "80"
 
   # Build Graph to compute logit predictions
   logits = vgg.build(data)
@@ -82,7 +86,7 @@ with tf.Graph().as_default() as g:
   top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
   # Restore the moving average version of the learned vars for eval. 
-  variable_averages = tf.train.ExponentialMovingAverage(GG.MOVING_AVERAGE_DECAY)
+  variable_averages = tf.train.ExponentialMovingAverage(VGG.MOVING_AVERAGE_DECAY)
   variables_to_restore = variable_averages.variables_to_restore()
   saver = tf.train.Saver(variables_to_restore)
 
