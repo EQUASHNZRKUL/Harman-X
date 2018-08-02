@@ -1,5 +1,5 @@
 import VGG
-# import VGG_train
+from VGG_eval import eval_step
 import tensorflow as tf
 import time
 from datetime import datetime
@@ -8,88 +8,43 @@ from datetime import datetime
 
 # Basic model parameters.
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('train_dir', 'checkpoints/',
-                           """Directory where to write event logs """
-                           """and checkpoint.""")
-tf.app.flags.DEFINE_integer('log_frequency', 10,
-                            """How often to log results to the console.""")
-tf.app.flags.DEFINE_integer('max_steps', 100000,
-                            """Number of batches to run.""")
 
-with tf.Graph().as_default():
+tf.app.flags.DEFINE_string('eval_dir', 'eval_logs/',
+                           """Directory where to write event logs.""")
+tf.app.flags.DEFINE_string('eval_data', '../MFCCData_folder/MFCCData_split/test.npz',
+                           """Either 'test' or 'train_eval'.""")
+tf.app.flags.DEFINE_string('checkpoint_dir', 'checkpoints/',
+                           """Directory where to read model checkpoints.""")
+tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
+                            """How often to run the eval.""")
+tf.app.flags.DEFINE_integer('num_examples', 10000,
+                            """Number of examples to run.""")
+tf.app.flags.DEFINE_boolean('run_once', False,
+                         """Whether to run eval only once.""")   
+with tf.Graph().as_default() as g:
+  # Get images and labels for CIFAR-10.
+  # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+  # vgg.split({'train':6, 'test':4})
+  vgg = VGG.VGG(FLAGS.eval_data)
+  data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
 
-  print("2. vgg_d: (w/ data)")
-  print("3. instantiate: ")
-  vgg_d = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
-  # vgg_d.graph
-  print(tf.Graph())
+  # Build Graph to compute logit predictions
+  logits = vgg.build(data)
 
-  print("4. splitting data into train and test")
-  # vgg_d.split({'train':6, 'test':4})
+  # Calculate predictions
+  top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
-  print("5. translating datadict train into tensors")
-  data, labels = vgg_d.dic_to_inputs(vgg_d.datadict['train'])
+  # Restore the moving average version of the learned vars for eval. 
+  variable_averages = tf.train.ExponentialMovingAverage(GG.MOVING_AVERAGE_DECAY)
+  variables_to_restore = variable_averages.variables_to_restore()
+  saver = tf.train.Saver(variables_to_restore)
 
-  print(data.graph) 
-  print(labels.graph)
-  print(tf.get_default_graph)
+  # Build summary op based on collection of Summaries.
+  # summary_op = tf.summary.merge_all()
+  # summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
 
-  print("6. building network and obtaining logits")
-  logits = vgg_d.build(data)
-
-  print("7. getting loss operation")
-  loss = vgg_d.loss(logits, labels)
-
-  print(loss.graph)
-
-  print("8. getting training op")
-  global_step = tf.train.get_or_create_global_step()
-  train_op = vgg_d.train(loss, global_step)
-
-  print(train_op.graph)
-  print(global_step)
-
-  # LoggerHook:
-  class _LoggerHook(tf.train.SessionRunHook):
-    """Logs loss and runtime"""
-    def begin(self):
-      self._global_step_tensor = global_step
-      self._step = -1
-      self._start_time = time.time()
-    
-    def before_run(self, run_context):
-      self._step += 1
-      return tf.train.SessionRunArgs(loss)
-
-    def after_run(self, run_context, run_values):
-      if self._step % FLAGS.log_frequency == 0:
-        curr_time = time.time()
-        duration = curr_time - self._start_time
-        self._start_time = curr_time
-
-        loss_value = run_values.results
-        examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
-        sec_per_batch = float(duration / FLAGS.log_frequency)
-
-        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-                        'sec/batch)')
-        print((format_str % (datetime.now(), self._step, loss_value,
-                               examples_per_sec, sec_per_batch)))
-
-  print("train section. ")
-  with tf.Session() as sess:
-    print("TensorBoard section. ")
-    writer = tf.summary.FileWriter('./summary')
-    writer.add_graph(train_op.graph)
-    writer.close
-  with tf.train.MonitoredTrainingSession(
-    checkpoint_dir=FLAGS.train_dir,
-    hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
-      tf.train.NanTensorHook(loss), 
-      _LoggerHook()]) as mon_sess:
-
-    print("training... ")
-    # while not mon_sess.should_stop():
-    #   print(mon_sess.run(global_step))
-    #   mon_sess.run(train_op)
-    print time.time()
+  while True:
+    eval_step(saver, top_k_op)
+    if FLAGS.run_once:
+      break
+    sleep(FLAGS.eval_interval_secs)
