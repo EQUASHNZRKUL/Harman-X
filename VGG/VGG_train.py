@@ -1,5 +1,6 @@
 import VGG
 import tensorflow as tf
+import time
 
 # Basic model parameters
 FLAGS = tf.app.flags.FLAGS
@@ -28,13 +29,12 @@ with tf.Graph().as_default():
   class _LoggerHook(tf.train.SessionRunHook):
     """Logs loss and runtime"""
     def begin(self):
-      self._global_step_tensor = global_step
       self._step = -1
       self._start_time = time.time()
     
     def before_run(self, run_context):
       self._step += 1
-      return tf.train.SessionRunArgs(loss)
+      return tf.train.SessionRunArgs(loss) # Asks for loss value. 
 
     def after_run(self, run_context, run_values):
       if self._step % FLAGS.log_frequency == 0:
@@ -51,17 +51,19 @@ with tf.Graph().as_default():
         print((format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch)))
 
+  with tf.Session() as sess:
+    print("TensorBoard section. ")
+    writer = tf.summary.FileWriter('./summary')
+    writer.add_graph(train_op.graph)
+    writer.close
+
   print("train section. ")
   with tf.train.MonitoredTrainingSession(
     checkpoint_dir=FLAGS.train_dir,
     hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
       tf.train.NanTensorHook(loss), 
-      _LoggerHook()]) as mon_sess:
-
-    print("TensorBoard section. ")
-    writer = tf.summary.FileWriter('./summary')
-    writer.add_graph(train_op.graph)
-    writer.close
+      _LoggerHook()], 
+      save_checkpoint_secs=120) as mon_sess:
 
     print("training...")
     while not mon_sess.should_stop():

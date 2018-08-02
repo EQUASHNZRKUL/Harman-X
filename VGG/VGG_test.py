@@ -75,7 +75,8 @@ with tf.Graph().as_default() as g:
   # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
   # vgg.split({'train':6, 'test':4})
   print "1) Instantiate: "
-  vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+  vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+  vgg.split({'train':6, 'test':4})
   print vgg.datadict.keys()
   data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
   print data
@@ -87,7 +88,7 @@ with tf.Graph().as_default() as g:
   print logits
 
   # Calculate predictions
-  print "3) Get checkpoint"
+  print "3) Get predictions"
   top_k_op = tf.nn.in_top_k(logits, labels, 1)
   print top_k_op
 
