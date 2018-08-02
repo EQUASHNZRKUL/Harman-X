@@ -69,7 +69,7 @@ def eval_step(saver, top_k_op):
     coord.request_stop()
     coord.join(threads, stop_grace_period_secs=10)
 
-  """Eval CIFAR-10 for a number of steps."""
+"""Eval CIFAR-10 for a number of steps."""
 with tf.Graph().as_default() as g:
   # Get images and labels for CIFAR-10.
   # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
