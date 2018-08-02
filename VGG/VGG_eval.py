@@ -69,34 +69,76 @@ def eval_step(saver, top_k_op):
     coord.request_stop()
     coord.join(threads, stop_grace_period_secs=10)
 
-"""Eval CIFAR-10 for a number of steps."""
-with tf.Graph().as_default() as g:
-  # Get images and labels for CIFAR-10.
-  # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
-  # vgg.split({'train':6, 'test':4})
-  vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
-  print "78"
-  data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
-  print "80"
+def evaluate():
+  """Eval CIFAR-10 for a number of steps."""
+  with tf.Graph().as_default() as g:
+    # Get images and labels for CIFAR-10.
+    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+    data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
 
-  # Build Graph to compute logit predictions
-  logits = vgg.build(data)
+    # Build a Graph that computes the logits predictions from the
+    # inference model.
+    logits = vgg.build(data)
 
-  # Calculate predictions
-  top_k_op = tf.nn.in_top_k(logits, labels, 1)
+    # Calculate predictions.
+    top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
-  # Restore the moving average version of the learned vars for eval. 
-  variable_averages = tf.train.ExponentialMovingAverage(VGG.MOVING_AVERAGE_DECAY)
-  variables_to_restore = variable_averages.variables_to_restore()
-  saver = tf.train.Saver(variables_to_restore)
+    # Restore the moving average version of the learned variables for eval.
+    variable_averages = tf.train.ExponentialMovingAverage(
+        VGG.MOVING_AVERAGE_DECAY)
+    variables_to_restore = variable_averages.variables_to_restore()
+    saver = tf.train.Saver(variables_to_restore)
 
-  # Build summary op based on collection of Summaries.
-  # summary_op = tf.summary.merge_all()
-  # summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
+    # Build the summary operation based on the TF collection of Summaries.
+    summary_op = tf.summary.merge_all()
 
-  while True:
-    eval_step(saver, top_k_op)
-    if FLAGS.run_once:
-      break
-    sleep(FLAGS.eval_interval_secs)
+    summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
+
+    while True:
+      eval_step(saver, top_k_op)
+      if FLAGS.run_once:
+        break
+      sleep(FLAGS.eval_interval_secs)
+
+
+def main(argv=None):  # pylint: disable=unused-argument
+  if tf.gfile.Exists(FLAGS.eval_dir):
+    tf.gfile.DeleteRecursively(FLAGS.eval_dir)
+  tf.gfile.MakeDirs(FLAGS.eval_dir)
+  evaluate()
+
+
+if __name__ == '__main__':
+  tf.app.run()
+
+# """Eval CIFAR-10 for a number of steps."""
+# with tf.Graph().as_default() as g:
+#   # Get images and labels for CIFAR-10.
+#   # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+#   # vgg.split({'train':6, 'test':4})
+#   vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+#   print "78"
+#   data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
+#   print "80"
+
+#   # Build Graph to compute logit predictions
+#   logits = vgg.build(data)
+
+#   # Calculate predictions
+#   top_k_op = tf.nn.in_top_k(logits, labels, 1)
+
+#   # Restore the moving average version of the learned vars for eval. 
+#   variable_averages = tf.train.ExponentialMovingAverage(VGG.MOVING_AVERAGE_DECAY)
+#   variables_to_restore = variable_averages.variables_to_restore()
+#   saver = tf.train.Saver(variables_to_restore)
+
+#   # Build summary op based on collection of Summaries.
+#   # summary_op = tf.summary.merge_all()
+#   # summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
+
+#   while True:
+#     eval_step(saver, top_k_op)
+#     if FLAGS.run_once:
+#       break
+#     sleep(FLAGS.eval_interval_secs)
 
