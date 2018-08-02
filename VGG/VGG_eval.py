@@ -1,6 +1,7 @@
 import VGG
 import tensorflow as tf
 import numpy as np 
+from time import sleep
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -17,7 +18,7 @@ tf.app.flags.DEFINE_integer('num_examples', 10000,
 tf.app.flags.DEFINE_boolean('run_once', False,
                          """Whether to run eval only once.""")                
                     
-def eval_step(self, saver, top_k_op):
+def eval_step(saver, top_k_op):
   """ Runs eval once
 
   Requires:
@@ -53,7 +54,7 @@ def eval_step(self, saver, top_k_op):
       while step < num_iter and not coord.should_stop():
         predictions = sess.run([top_k_op])
         true_count += np.sum(predictions)
-        total_sample_count = num_iter * self.batch_size
+        total_sample_count = num_iter * FLAGS.batch_size
         step += 1
       
       # Post-processing: Compute precision @ 1
@@ -93,5 +94,5 @@ with tf.Graph().as_default() as g:
     eval_step(saver, top_k_op)
     if FLAGS.run_once:
       break
-    time.sleep(FLAGS.eval_interval_secs)
+    sleep(FLAGS.eval_interval_secs)
 
