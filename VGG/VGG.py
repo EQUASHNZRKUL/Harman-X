@@ -11,6 +11,8 @@ MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average.
 NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays.
 LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
 INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
+NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 900
+NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 600
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -33,6 +35,34 @@ def _dict_length(d):
   for _, v in d.items():
     l += len(v)
   return l
+
+def _add_loss_summaries(total_loss):
+  """Add summaries for losses in CIFAR-10 model.
+
+  Generates moving average for all losses and associated summaries for
+  visualizing the performance of the network.
+
+  Args:
+    total_loss: Total loss from loss().
+  Returns:
+    loss_averages_op: op for generating moving averages of losses.
+  """
+  # Compute the moving average of all individual losses and the total loss.
+  loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
+  losses = tf.get_collection('losses')
+  loss_averages_op = loss_averages.apply(losses + [total_loss])
+  print ("--loss_averages_op: ")
+  print (loss_averages_op)
+
+  # Attach a scalar summary to all individual losses and the total loss; do the
+  # same for the averaged version of the losses.
+  for l in losses + [total_loss]:
+    # Name each loss as '(raw)' and name the moving average version of the loss
+    # as the original loss name.
+    tf.summary.scalar(l.op.name + ' (raw)', l)
+    tf.summary.scalar(l.op.name, loss_averages.average(l))
+
+  return loss_averages_op
 
 class VGG:
   def __init__(self, dir=None):
@@ -158,9 +188,9 @@ class VGG:
     # Convert into tensors
     raw_data = np.array(data)
     raw_data = tf.constant(raw_data, dtype=tf.float32, name='inputs')
-    print(raw_data)
+    # print(raw_data)
     data = tf.expand_dims(raw_data, 3)
-    print(data)
+    # print(data)
     # data = tf.constant(data, dtype=tf.float32, name='inputs')
     labels = np.array(labels)
     labels = tf.constant(labels, name='labels')
@@ -241,12 +271,12 @@ class VGG:
     return tf.nn.avg_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)  
 
   def _max_pool(self, input, name):
-    print(input.name + ": " + str(input.shape))
+    # print(input.name + ": " + str(input.shape))
     return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)
 
   def _conv_node(self, input, size, filters, name):
     with tf.variable_scope(name) as scope:
-      print(input.name + ": " + str(input.shape))
+      # print(input.name + ": " + str(input.shape))
       in_dim = input.shape[3]
       kernel = self._variable_with_weight_decay('weights', shape=[size, size, in_dim, filters])
       # print in_dim
@@ -258,15 +288,15 @@ class VGG:
 
   def _reshape_node(self, input, length, name):
     with tf.variable_scope(name) as scope:
-      print(input.name + ": " + str(input.shape))
+      # print(input.name + ": " + str(input.shape))
       # Convert to a 2D array (layers of lists) so we can perform a single matr*
       self.reshape = tf.reshape(input, [length, -1])
       dim = self.reshape.get_shape()[1].value
-      print(dim)
+      # print(dim)
   
   def _local_layer(self, input, length, name):
     with tf.variable_scope(name) as scope:
-      print(input.name + ": " + str(input.shape))
+      # print(input.name + ": " + str(input.shape))
       dim = input.get_shape()[1].value
       weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
                 stddev=0.04)
@@ -285,62 +315,69 @@ class VGG:
       softmax_linear = tf.add(tf.matmul(input, weights), biases, name=name)
       return softmax_linear
 
-  def train(self, logits, labels, global_step):
+  def loss(self, logits, labels):
     """ Calculates the loss of the calculated [logit] values and true [labels]
     Returns: scalar representing the total loss. 
     """
+    # Calculate the average cross entropy loss across the batch.
     labels = tf.cast(labels, tf.int64)
-    # print logits
-    # print labels
+    print ("--labels: ")
+    print (labels)
 
-    # Backpropagation sort of thing? TODO: read up on cross_entropy
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-      labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
+        labels=labels, logits=logits, name='cross_entropy_per_example')
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
-    # print "cross_entropy_mean"
-    # print cross_entropy_mean
     tf.add_to_collection('losses', cross_entropy_mean)
 
-    # total loss = cross_entropy plus all weight decay terms. 
-    total_loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
+    # The total loss is defined as the cross entropy loss plus all of the weight
+    # decay terms (L2 loss).
+    return tf.add_n(tf.get_collection('losses'), name='total_loss')
+    # labels = tf.cast(labels, tf.int64)
+    # cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
+    #   labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
+    # cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
+    # # print "cross_entropy_mean"
+    # # print cross_entropy_mean
+    # tf.add_to_collection('losses', cross_entropy_mean)
 
-    # train() starts here
+    # # total loss = cross_entropy plus all weight decay terms. 
+    # return tf.add_n(tf.get_collection('losses'), name='total_loss')
+
+  def train(self, total_loss, global_step):
+    """ Trains the model. 
+    Creates an optimizer and applies to all trainable variables. Adds moving avg
+    for trainable vars. 
+    Requires: 
+    - [total_loss]: Total loss calculated from [loss()].
+    - [global_step]: Integer Variables counting elapsed iterations of training steps. 
+    Returns:
+    - [trian_op]: training operation tensor. 
+    """
     # Collect variables that affect learning rate
-    data_count = _dict_length(self.datadict['train'])
-    class_count = len(self.mapping) # labels is 1D tensor of length batch_size
-    num_batches_per_epoch = data_count / class_count 
-
+    num_batches_per_epoch = NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN / FLAGS.batch_size
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
 
     # Decay the learning rate exponentially based on the number of steps.
-    learning_rate = tf.train.exponential_decay(INITIAL_LEARNING_RATE, 
-      global_step, decay_steps, LEARNING_RATE_DECAY_FACTOR, staircase=True)
-    tf.summary.scalar('learning_rate', learning_rate) # Don't think necessary (TB think I think)
+    lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE,
+                                    global_step,
+                                    decay_steps,
+                                    LEARNING_RATE_DECAY_FACTOR,
+                                    staircase=True)
+    tf.summary.scalar('learning_rate', lr)
 
     # Generate moving averages of all losses and associated summaries
-    loss_avgs = tf.train.ExponentialMovingAverage(0.9, name='avg')
-    print "loss_avgs: "
-    print loss_avgs
-    print "losses: "
-    losses = tf.get_collection('losses')
-    print losses
-    print "loss_avgs_op: "
-    loss_avgs_op = loss_avgs.apply(losses + [total_loss])
-    print loss_avgs_op
-    # Reference Code contains helper w/ Scalar Summary tensors (TB)
+    loss_avgs_op = _add_loss_summaries(total_loss)
 
     # Compute gradients
     with tf.control_dependencies([loss_avgs_op]):
-      opt = tf.train.GradientDescentOptimizer(learning_rate)
-      print "opt: "
-      print opt
+      opt = tf.train.GradientDescentOptimizer(lr)
+      # print opt
       grads = opt.compute_gradients(total_loss)
-      # print "grads: "
       # print grads
 
     # Apply gradients
     apply_grad_op = opt.apply_gradients(grads, global_step=global_step)
-    # print apply_grad_op
+    # print apply_grad_op 
 
     # Add histograms (optional)
     for var in tf.trainable_variables():
