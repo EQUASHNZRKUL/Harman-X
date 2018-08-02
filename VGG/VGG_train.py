@@ -1,6 +1,7 @@
 import VGG
 import tensorflow as tf
 import time
+from datetime import datetime
 
 # Basic model parameters
 FLAGS = tf.app.flags.FLAGS
@@ -23,33 +24,34 @@ with tf.Graph().as_default():
 
   logits = vgg.build(data)
   loss = vgg.loss(logits, labels)
+  print "train op:"
   train_op = vgg.train(loss, global_step)
-  print(vgg.batch_size)
+  print(train_op)
 
-  class _LoggerHook(tf.train.SessionRunHook):
-    """Logs loss and runtime"""
-    def begin(self):
-      self._step = -1
-      self._start_time = time.time()
+  # class _LoggerHook(tf.train.SessionRunHook):
+  #   """Logs loss and runtime"""
+  #   def begin(self):
+  #     self._step = -1
+  #     self._start_time = time.time()
     
-    def before_run(self, run_context):
-      self._step += 1
-      return tf.train.SessionRunArgs(loss) # Asks for loss value. 
+  #   def before_run(self, run_context):
+  #     self._step += 1
+  #     return tf.train.SessionRunArgs(loss) # Asks for loss value. 
 
-    def after_run(self, run_context, run_values):
-      if self._step % FLAGS.log_frequency == 0:
-        curr_time = time.time()
-        duration = curr_time - self._start_time
-        self._start_time = curr_time
+  #   def after_run(self, run_context, run_values):
+  #     if self._step % FLAGS.log_frequency == 0:
+  #       curr_time = time.time()
+  #       duration = curr_time - self._start_time
+  #       self._start_time = curr_time
 
-        loss_value = run_values.results
-        examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
-        sec_per_batch = float(duration / FLAGS.log_frequency)
+  #       loss_value = run_values.results
+  #       examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
+  #       sec_per_batch = float(duration / FLAGS.log_frequency)
 
-        format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-                        'sec/batch)')
-        print((format_str % (datetime.now(), self._step, loss_value,
-                               examples_per_sec, sec_per_batch)))
+  #       format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
+  #                       'sec/batch)')
+  #       print((format_str % (datetime.now(), self._step, loss_value,
+  #                              examples_per_sec, sec_per_batch)))
 
   with tf.Session() as sess:
     print("TensorBoard section. ")
@@ -58,15 +60,15 @@ with tf.Graph().as_default():
     writer.close
 
   print("train section. ")
-  with tf.train.MonitoredTrainingSession(
-    checkpoint_dir=FLAGS.train_dir,
-    hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
-      tf.train.NanTensorHook(loss), 
-      _LoggerHook()], 
-      save_checkpoint_secs=120) as mon_sess:
-
-    print("training...")
-    while not mon_sess.should_stop():
-      print(mon_sess.run(global_step))
-      mon_sess.run(train_op)
+  print loss
+  print tf.train.SessionRunArgs(loss)
+  # with tf.train.MonitoredTrainingSession(
+  #   checkpoint_dir=FLAGS.train_dir,
+  #   hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps), tf.train.NanTensorHook(loss), 
+  #   _LoggerHook()], save_checkpoint_secs=120) as mon_sess:
+  #   print("training...")
+  #   print (mon_sess.should_stop())
+  #   while not mon_sess.should_stop():
+  #     print (mon_sess.should_stop())
+  #     mon_sess.run(train_op)
 

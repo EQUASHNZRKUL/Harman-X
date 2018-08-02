@@ -290,17 +290,20 @@ class VGG:
     Returns: scalar representing the total loss. 
     """
     labels = tf.cast(labels, tf.int64)
+    print logits
+    print labels
 
     # Backpropagation sort of thing? TODO: read up on cross_entropy
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
       labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
+    print "cross_entropy_mean"
+    print cross_entropy_mean
     tf.add_to_collection('losses', cross_entropy_mean)
 
     # total loss = cross_entropy plus all weight decay terms. 
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
-  # TODO: Need both the training and eval data in the object at the same time
   def train(self, total_loss, global_step):
     """ Trains the model. 
     Creates an optimizer and applies to all trainable variables. Adds moving avg
@@ -327,17 +330,26 @@ class VGG:
 
     # Generate moving averages of all losses and associated summaries
     loss_avgs = tf.train.ExponentialMovingAverage(0.9, name='avg')
+    print "loss_avgs: "
+    print loss_avgs
+    print "losses: "
     losses = tf.get_collection('losses')
+    print losses
+    print "loss_avgs_op: "
     loss_avgs_op = loss_avgs.apply(losses + [total_loss])
+    print loss_avgs_op
     # Reference Code contains helper w/ Scalar Summary tensors (TB)
 
     # Compute gradients
     with tf.control_dependencies([loss_avgs_op]):
       opt = tf.train.GradientDescentOptimizer(learning_rate)
+      print opt
       grads = opt.compute_gradients(total_loss)
+      print grads
 
     # Apply gradients
     apply_grad_op = opt.apply_gradients(grads, global_step=global_step)
+    print apply_grad_op
 
     # Add histograms (optional)
     for var in tf.trainable_variables():
