@@ -285,37 +285,26 @@ class VGG:
       softmax_linear = tf.add(tf.matmul(input, weights), biases, name=name)
       return softmax_linear
 
-  def loss(self, logits, labels):
+  def train(self, logits, labels, global_step):
     """ Calculates the loss of the calculated [logit] values and true [labels]
     Returns: scalar representing the total loss. 
     """
     labels = tf.cast(labels, tf.int64)
-    print logits
-    print labels
+    # print logits
+    # print labels
 
     # Backpropagation sort of thing? TODO: read up on cross_entropy
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
       labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
-    print "cross_entropy_mean"
-    print cross_entropy_mean
+    # print "cross_entropy_mean"
+    # print cross_entropy_mean
     tf.add_to_collection('losses', cross_entropy_mean)
 
     # total loss = cross_entropy plus all weight decay terms. 
-    return tf.add_n(tf.get_collection('losses'), name='total_loss')
+    total_loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
 
-  def train(self, total_loss, global_step):
-    """ Trains the model. 
-    Creates an optimizer and applies to all trainable variables. Adds moving avg
-    for trainable vars. 
-
-    Requires: 
-    - [total_loss]: Total loss calculated from [loss()].
-    - [global_step]: Integer Variables counting elapsed iterations of training steps. 
-
-    Returns:
-    - [trian_op]: training operation tensor. 
-    """
+    # train() starts here
     # Collect variables that affect learning rate
     data_count = _dict_length(self.datadict['train'])
     class_count = len(self.mapping) # labels is 1D tensor of length batch_size
@@ -343,13 +332,15 @@ class VGG:
     # Compute gradients
     with tf.control_dependencies([loss_avgs_op]):
       opt = tf.train.GradientDescentOptimizer(learning_rate)
+      print "opt: "
       print opt
       grads = opt.compute_gradients(total_loss)
-      print grads
+      # print "grads: "
+      # print grads
 
     # Apply gradients
     apply_grad_op = opt.apply_gradients(grads, global_step=global_step)
-    print apply_grad_op
+    # print apply_grad_op
 
     # Add histograms (optional)
     for var in tf.trainable_variables():
