@@ -355,4 +355,3 @@ class VGG:
     return variable_avgs_op
 
     # return average variable operation 
-  
