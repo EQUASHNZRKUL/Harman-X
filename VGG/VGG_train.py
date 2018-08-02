@@ -23,7 +23,7 @@ with tf.Graph().as_default():
   logits = vgg.build(data)
   loss = vgg.loss(logits, labels)
   train_op = vgg.train(loss, global_step)
-  print vgg.batch_size
+  print(vgg.batch_size)
 
   class _LoggerHook(tf.train.SessionRunHook):
     """Logs loss and runtime"""
@@ -48,27 +48,23 @@ with tf.Graph().as_default():
 
         format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
-        print (format_str % (datetime.now(), self._step, loss_value,
-                               examples_per_sec, sec_per_batch))
+        print((format_str % (datetime.now(), self._step, loss_value,
+                               examples_per_sec, sec_per_batch)))
 
-  print "train section. "
+  print("train section. ")
   with tf.train.MonitoredTrainingSession(
     checkpoint_dir=FLAGS.train_dir,
     hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
       tf.train.NanTensorHook(loss), 
       _LoggerHook()]) as mon_sess:
 
-    print "TensorBoard section. "
+    print("TensorBoard section. ")
     writer = tf.summary.FileWriter('./summary')
     writer.add_graph(train_op.graph)
     writer.close
 
-    print "training..."
+    print("training...")
     while not mon_sess.should_stop():
-      print mon_sess.run(global_step)
+      print(mon_sess.run(global_step))
       mon_sess.run(train_op)
-
-  # writer = tf.summary.FileWriter('./summary')
-  # writer.add_graph(train_op.graph)
-  # writer.close
 

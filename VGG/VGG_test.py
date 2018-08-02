@@ -18,36 +18,36 @@ tf.app.flags.DEFINE_integer('max_steps', 100000,
 
 with tf.Graph().as_default():
 
-  print "2. vgg_d: (w/ data)"
-  print "3. instantiate: "
+  print("2. vgg_d: (w/ data)")
+  print("3. instantiate: ")
   vgg_d = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
   # vgg_d.graph
-  print tf.Graph()
+  print(tf.Graph())
 
-  print "4. splitting data into train and test"
+  print("4. splitting data into train and test")
   # vgg_d.split({'train':6, 'test':4})
 
-  print "5. translating datadict train into tensors"
+  print("5. translating datadict train into tensors")
   data, labels = vgg_d.dic_to_inputs(vgg_d.datadict['train'])
 
-  print data.graph 
-  print labels.graph
-  print tf.get_default_graph
+  print(data.graph) 
+  print(labels.graph)
+  print(tf.get_default_graph)
 
-  print "6. building network and obtaining logits"
+  print("6. building network and obtaining logits")
   logits = vgg_d.build(data)
 
-  print "7. getting loss operation"
+  print("7. getting loss operation")
   loss = vgg_d.loss(logits, labels)
 
-  print loss.graph
+  print(loss.graph)
 
-  print "8. getting training op"
+  print("8. getting training op")
   global_step = tf.train.get_or_create_global_step()
   train_op = vgg_d.train(loss, global_step)
 
-  print train_op.graph
-  print global_step
+  print(train_op.graph)
+  print(global_step)
 
   # LoggerHook:
   class _LoggerHook(tf.train.SessionRunHook):
@@ -73,23 +73,23 @@ with tf.Graph().as_default():
 
         format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
                         'sec/batch)')
-        print (format_str % (datetime.now(), self._step, loss_value,
-                               examples_per_sec, sec_per_batch))
+        print((format_str % (datetime.now(), self._step, loss_value,
+                               examples_per_sec, sec_per_batch)))
 
-  print "train section. "
+  print("train section. ")
   with tf.train.MonitoredTrainingSession(
     checkpoint_dir=FLAGS.train_dir,
     hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
       tf.train.NanTensorHook(loss), 
       _LoggerHook()]) as mon_sess:
 
-    print "TensorBoard section. "
+    print("TensorBoard section. ")
     writer = tf.summary.FileWriter('./summary')
     writer.add_graph(train_op.graph)
     writer.close
 
-    print "training... "
-    print mon_sess.run(global_step)
+    print("training... ")
+    print(mon_sess.run(global_step))
     while not mon_sess.should_stop():
-      print mon_sess.run(global_step)
+      print(mon_sess.run(global_step))
       mon_sess.run(train_op)

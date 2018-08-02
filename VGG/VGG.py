@@ -1,7 +1,6 @@
 import numpy as np 
 import math
 import tensorflow as tf 
-import tensorflow.layers as l
 import tensorflow.nn
 import os
 
@@ -31,7 +30,7 @@ def _get_filename(dir):
 
 def _dict_length(d):
   l = 0
-  for _, v in d.iteritems():
+  for _, v in d.items():
     l += len(v)
   return l
 
@@ -45,7 +44,7 @@ class VGG:
     self.datadict = {}
     self.mapping = {}
     self.batch_size = 0
-    print tf.Graph()
+    print(tf.Graph())
     if dir is not None:
       self.datadict = {}
       self.mapping = {}
@@ -56,7 +55,7 @@ class VGG:
 
       # need to translate keys into ints and store a mapping
       # this is necessary now because they will be randomized later
-      for k, v in datadict.iteritems():
+      for k, v in datadict.items():
         try:
           self.datadict[name][i] = v
           self.mapping[k] = i 
@@ -119,13 +118,13 @@ class VGG:
     # Unrolls the biasedlist & wipes the biasdict
     seed(1)
     biasedlist = []
-    for k, v in biasdict.iteritems():
+    for k, v in biasdict.items():
       biasedlist = biasedlist + [k] * v
       biasdict[k] = {}
 
     # Reveals the [d] master dict & processes categorization 
-    d = self.datadict[self.datadict.keys()[0]]
-    for cmd, mfcc_array in d.iteritems():
+    d = self.datadict[list(self.datadict.keys())[0]]
+    for cmd, mfcc_array in d.items():
       for mfcc in mfcc_array:
         classification = choice(biasedlist)
         try:
@@ -146,7 +145,7 @@ class VGG:
     prep_assoc_list = []
 
     # Randomize order of inputs:
-    for cmd, mfcc_list in dic.iteritems():
+    for cmd, mfcc_list in dic.items():
       for mfcc in mfcc_list:
         prep_assoc_list.append((cmd, mfcc))
     shuffle(prep_assoc_list)
@@ -159,9 +158,9 @@ class VGG:
     # Convert into tensors
     raw_data = np.array(data)
     raw_data = tf.constant(raw_data, dtype=tf.float32, name='inputs')
-    print raw_data
+    print(raw_data)
     data = tf.expand_dims(raw_data, 3)
-    print data
+    print(data)
     # data = tf.constant(data, dtype=tf.float32, name='inputs')
     labels = np.array(labels)
     labels = tf.constant(labels, name='labels')
@@ -242,12 +241,12 @@ class VGG:
     return tf.nn.avg_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)  
 
   def _max_pool(self, input, name):
-    print input.name + ": " + str(input.shape)
+    print(input.name + ": " + str(input.shape))
     return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)
 
   def _conv_node(self, input, size, filters, name):
     with tf.variable_scope(name) as scope:
-      print input.name + ": " + str(input.shape)
+      print(input.name + ": " + str(input.shape))
       in_dim = input.shape[3]
       kernel = self._variable_with_weight_decay('weights', shape=[size, size, in_dim, filters])
       # print in_dim
@@ -259,15 +258,15 @@ class VGG:
 
   def _reshape_node(self, input, length, name):
     with tf.variable_scope(name) as scope:
-      print input.name + ": " + str(input.shape)
+      print(input.name + ": " + str(input.shape))
       # Convert to a 2D array (layers of lists) so we can perform a single matr*
       self.reshape = tf.reshape(input, [length, -1])
       dim = self.reshape.get_shape()[1].value
-      print dim
+      print(dim)
   
   def _local_layer(self, input, length, name):
     with tf.variable_scope(name) as scope:
-      print input.name + ": " + str(input.shape)
+      print(input.name + ": " + str(input.shape))
       dim = input.get_shape()[1].value
       weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
                 stddev=0.04)
@@ -278,7 +277,7 @@ class VGG:
   def _output_layer(self, input, name):
     with tf.variable_scope('output') as scope:
       dim = input.get_shape()[1].value
-      num_classes = len(self.mapping.keys())
+      num_classes = len(list(self.mapping.keys()))
       weights = self._variable_with_weight_decay('weights', shape=
                 [dim, num_classes], stddev=(1.0/dim))
       biases = self._variable_on_cpu('biases', [num_classes], 
@@ -398,7 +397,7 @@ class VGG:
         
         # Post-processing: Compute precision @ 1
         precision = true_count / total_sample_count
-        print ("precision @ 1: %3f" % precision)
+        print(("precision @ 1: %3f" % precision))
 
       except Exception as e: #pylint: disable=broad-except
         coord.request_stop(e)
