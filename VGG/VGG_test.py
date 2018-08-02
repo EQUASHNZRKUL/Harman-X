@@ -94,13 +94,17 @@ with tf.Graph().as_default() as g:
   # Restore the moving average version of the learned vars for eval. 
   print "4) get variable_averages"
   variable_averages = tf.train.ExponentialMovingAverage(VGG.MOVING_AVERAGE_DECAY)
+  print variable_averages
   variables_to_restore = variable_averages.variables_to_restore()
+  print variables_to_restore
   saver = tf.train.Saver(variables_to_restore)
+  print saver
 
   # Build summary op based on collection of Summaries.
   # summary_op = tf.summary.merge_all()
   # summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
 
+  print "5) Evaluate step"
   while True:
     eval_step(saver, top_k_op)
     if FLAGS.run_once:
