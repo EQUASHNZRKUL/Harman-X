@@ -177,7 +177,7 @@ class VGG:
     Requires:
     - [input]: 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 1]
     Returns:
-    - [logits]
+    - [logits]: A 1D tensor of [batch_size]
     """
     # Layer 1:
     self.conv3_1 = self._conv_node(input, 3, 64, "conv3_1")
@@ -356,60 +356,3 @@ class VGG:
 
     # return average variable operation 
   
-  def eval_step(self, saver, summary_writer, top_k_op, summary_op, ckpt_dir):
-    """ Runs eval once
-
-    Requires:
-    - ckpt_dir: directory to store the checkpoints
-    """
-    with tf.Session() as sess:
-      ckpt = tf.train.get_checkpoint_state(ckpt_dir)
-      if ckpt and ckpt.model_checkpoint_path:
-        # Restores from checkpoint
-        saver.restore(sess, ckpt.model_checkpoint_path)
-        # Assuming model_checkpoint_path looks something like:
-        #   /my-favorite-path/cifar10_train/model.ckpt-0,
-        # extract global_step from it.
-        global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-      else:
-        print('No checkpoint file found')
-        return
-
-      # Start Queue Runners
-      coord = tf.train.Coordinators()
-      try:
-        threads = []
-        for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS): # worried about QR
-          threads.extend(qr.create_threads(sess, coord=coord, daemon=True, start=True))
-
-        # Instantiate the loop variables. 
-        # TODO: translate FLAGS.checkpoint_dir, num_examples, batch_size
-        num_iter = int(math.ceil(FLAGS.num_examples / self.batch_size))
-        true_count = 0 # Counts #correct predictions
-        total_sample_count = FLAGS.num_examples
-        step = 0
-
-        while step < num_iter and not coord.should_stop():
-          predictions = sess.run([top_k_op])
-          true_count += np.sum(predictions)
-          total_sample_count = num_iter * self.batch_size
-          step += 1
-        
-        # Post-processing: Compute precision @ 1
-        precision = true_count / total_sample_count
-        print(("precision @ 1: %3f" % precision))
-
-      except Exception as e: #pylint: disable=broad-except
-        coord.request_stop(e)
-
-      coord.request_stop()
-      coord.join(threads, stop_grace_period_secs=10)
-
-    def evaluate():
-      """Eval CIFAR-10 for a number of steps."""
-      with tf.Graph().as_default() as g:
-        # Get images and labels for CIFAR-10.
-        eval_data = FLAGS.eval_data == 'test'
-        images, labels = VGG.inputs(eval_data=eval_data)
-
-        logits = vgg.inputs

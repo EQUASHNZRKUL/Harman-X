@@ -77,19 +77,19 @@ with tf.Graph().as_default():
                                examples_per_sec, sec_per_batch)))
 
   print("train section. ")
+  with tf.Session() as sess:
+    print("TensorBoard section. ")
+    writer = tf.summary.FileWriter('./summary')
+    writer.add_graph(train_op.graph)
+    writer.close
   with tf.train.MonitoredTrainingSession(
     checkpoint_dir=FLAGS.train_dir,
     hooks = [tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
       tf.train.NanTensorHook(loss), 
       _LoggerHook()]) as mon_sess:
 
-    print("TensorBoard section. ")
-    writer = tf.summary.FileWriter('./summary')
-    writer.add_graph(train_op.graph)
-    writer.close
-
     print("training... ")
-    print(mon_sess.run(global_step))
-    while not mon_sess.should_stop():
-      print(mon_sess.run(global_step))
-      mon_sess.run(train_op)
+    # while not mon_sess.should_stop():
+    #   print(mon_sess.run(global_step))
+    #   mon_sess.run(train_op)
+    print time.time()
