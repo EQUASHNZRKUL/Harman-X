@@ -37,5 +37,5 @@ def main(src_dir, biasdict, target_dir):
     np.savez(target_dir + k, **v)
 
 if __name__ == "__main__":
-  bd = {'test':1, 'train':10}
-  main("./MFCCData.npz", bd, "./MFCCData_split/")
+  bd = {'test':1, 'train':4}
+  main("./MFCCData_folder/MFCCData.npz", bd, "./MFCCData_split/")
