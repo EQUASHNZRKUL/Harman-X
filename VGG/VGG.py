@@ -336,16 +336,22 @@ class VGG:
       return tf.reshape(input, [length, -1])
   
   def local_layer(self, input, length, name):
+    """ Helper to create a fully connected layer with input [input], and 
+    resulting # nodes of [length] and title [name]."""
     with tf.variable_scope(name) as scope:
       dim = self.reshape.get_shape()[1].value
-      weights = self._variable_with_weight_decay('weights', shape=[dim, 100], 
+      weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
                 stddev=0.04, wd=0.004)
-      biases = self._variable_on_cpu('biases', [100], tf.constant_initializer(0.1))
+      biases = self._variable_on_cpu('biases', [length], tf.constant_initializer(0.1))
       fc_1 = tf.nn.relu(tf.matmul(self.reshape, weights) + biases, name=scope.name)
       _activation_summary(fc_1)
       return fc_1
   
   def output_layer(self, input, name):
+    """ Helper to create a soft_max linear layer with input [input] and title
+    [name]. Serves as output 
+    Requires:
+    - [input] is a fully-connected layer. """
     with tf.variable_scope('output') as scope:
       dim = input.get_shape()[1].value
       num_classes = len(list(self.mapping.keys()))+1
