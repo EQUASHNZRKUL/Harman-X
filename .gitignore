@@ -5,6 +5,7 @@ Filefinder.cmx
 Filefinder.o
 FileFinderFolder/PSF/data/
 FileFinderFolder/PSF/MFCCData/
+FileFinderFolder/PSF/MFCCData_split/
 FileFinderFolder/results/
 FileFinderFolder/PSF/MFCCData.zip
 metadata.ami_results.txt
