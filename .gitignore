@@ -13,5 +13,7 @@ FileFinderFolder/PSF/MFCCData_folder/
 FileFinderFolder/PSF/summary
 VGG/summary/
 VGG/checkpoints/
+VGG/eval_logs
+VGG/training_results
 FileFinderData/
 *.pyc

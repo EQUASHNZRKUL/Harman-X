@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Basic model parameters
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('train_dir', '.checkpoints/',
+tf.app.flags.DEFINE_string('train_dir', 'checkpoints/',
                            """Directory where to write event logs """
                            """and checkpoint.""")
 tf.app.flags.DEFINE_integer('log_frequency', 10,

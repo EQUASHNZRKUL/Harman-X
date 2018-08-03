@@ -102,7 +102,7 @@ class VGG:
       name = _get_filename(dir)
       datadict = np.load(dir)
       self.size = _dict_length(datadict)
-      i = -1
+      i = 0
 
       # need to translate keys into ints and store a mapping
       # this is necessary now because they will be randomized later
@@ -342,7 +342,7 @@ class VGG:
   def _output_layer(self, input, name):
     with tf.variable_scope('output') as scope:
       dim = input.get_shape()[1].value
-      num_classes = len(list(self.mapping.keys()))
+      num_classes = len(list(self.mapping.keys()))+1
       weights = self._variable_with_weight_decay('weights', shape=
                 [dim, num_classes], stddev=(1.0/dim))
       biases = self._variable_on_cpu('biases', [num_classes], 
