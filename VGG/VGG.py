@@ -55,8 +55,6 @@ def _add_loss_summaries(total_loss):
   loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
   losses = tf.get_collection('losses')
   loss_averages_op = loss_averages.apply(losses + [total_loss])
-  print ("--loss_averages_op: ")
-  print (loss_averages_op)
 
   # Attach a scalar summary to all individual losses and the total loss; do the
   # same for the averaged version of the losses.
@@ -96,7 +94,6 @@ class VGG:
     self.datadict = {}
     self.mapping = {}
     self.batch_size = 0
-    print(tf.Graph())
     if dir is not None:
       self.datadict = {}
       self.mapping = {}
@@ -116,7 +113,6 @@ class VGG:
           name_dict[i] = v
           self.datadict[name] = name_dict
           self.mapping[i] = k
-        # print self.datadict[name].keys()
         i += 1
   
   # -=- GETTERS & SETTERS -=-
@@ -148,20 +144,9 @@ class VGG:
 
   # -=- HELPERS -=-
 
-  # def load_file(self, npz):
-  #   key = npz[:-4]
-  #   try:
-  #     val = self.datadict[key]
-  #   except KeyError:
-  #     val = []
-  #   dic = np.load(npz)
-  #   v = dic["arr_0"]
-  #   for elt in v:
-  #     self.datadict[key] = val.append(elt)
-
-  def split(self, biasdict, eq_len=False, i=7):
+  def split(self, biasdict, eq_len=False, i=1):
     """ [split] splits up self.datadict into separate dictionaries weighted
-      according to [biasdict].
+    according to [biasdict].
     This code is pretty gross since I had to make some last minute changes to 
     make sure the eval and train both had all the keys. 
     Requires:
@@ -171,6 +156,7 @@ class VGG:
       & values are weights of the categories. e.g. {train:1, test:9} would mean
       1/10 prob each datapoint is categorized as 'train', and 9/10 for 'test'.
     - [eq_len]: specifies if its okay if the lengths of the dicts aren't equal.
+    - [i]: is a given seed. Increments by 1 each time the function fails. 
     """
     # Unrolls the biasedlist & wipes the biasdict
     seed(i)
@@ -223,10 +209,7 @@ class VGG:
     # Convert into tensors
     raw_data = np.array(data)
     raw_data = tf.constant(raw_data, dtype=tf.float32, name='inputs')
-    # print(raw_data)
     data = tf.expand_dims(raw_data, 3)
-    # print(data)
-    # data = tf.constant(data, dtype=tf.float32, name='inputs')
     labels = np.array(labels)
     labels = tf.constant(labels, name='labels')
 
@@ -239,37 +222,30 @@ class VGG:
 
   def build(self, input):
     """ [build] constructs the Neural Network structure with TensorFlow. 
+    [OPTIONAL]: Not exactly required for instantiating the network. A user can
+    build their own using TensorFlow functions or utilizing the layer producers.
     Requires:
     - [input]: 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 1]
     Returns:
     - [logits]: A 1D tensor of [batch_size]
     """
     # Layer 1:
-    self.conv3_1 = self._conv_node(input, 3, 4, "conv3_1")
-    self.mpool_1 = self._max_pool(self.conv3_1, "mpool_1")
+    self.conv3_1 = self.conv_node(input, 3, 4, "conv3_1")
+    self.mpool_1 = self.max_pool(self.conv3_1, "mpool_1")
 
     # Layer 2:
-    self.conv3_2 = self._conv_node(self.mpool_1, 3, 16, "conv3_2")
-    self.conv3_3 = self._conv_node(self.conv3_2, 3, 32, "conv3_3")
-    self.mpool_2 = self._max_pool(self.conv3_3, "mpool_2")
-    print ("------=======------")
-    print (self.mpool_2.shape)
+    self.conv3_2 = self.conv_node(self.mpool_1, 3, 16, "conv3_2")
+    self.conv3_3 = self.conv_node(self.conv3_2, 3, 32, "conv3_3")
+    self.mpool_2 = self.max_pool(self.conv3_3, "mpool_2")
 
     # Reshape Layer:
     with tf.variable_scope('fc_1') as scope:
-      # self.resize = self._reshape_node(self.mpool_2, length, "resize")
       self.reshape = tf.reshape(self.mpool_2, [input.get_shape().as_list()[0], -1])
-      dim = self.reshape.get_shape()[1].value
-      weights = self._variable_with_weight_decay('weights', shape=[dim, 100], 
-                stddev=0.04, wd=0.004)
-      biases = self._variable_on_cpu('biases', [100], tf.constant_initializer(0.1))
-      self.fc_1 = tf.nn.relu(tf.matmul(self.reshape, weights) + biases, name=scope.name)
-      _activation_summary(self.fc_1)
 
     # FC Layers:
-    # self.fc_1 = self._local_layer(self.reshape, 100, "fc_1")
+    self.fc_1 = self.local_layer(self.reshape, 100, "fc_1")
 
-    self.output = self._output_layer(self.fc_1, name="softmax_linear")
+    self.output = self.output_layer(self.fc_1, name="softmax_linear")
 
     return self.output
 
@@ -312,46 +288,64 @@ class VGG:
     return var
 
   # BUILD: LAYER PRODUCERS
-  def _avg_pool(self, input, name):
-    return tf.nn.avg_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)  
+  def avg_pool(self, input, name, size=2, pad=False):
+    """ Helper to create an average pool layer for the network [self] with input
+    of [input] and title [name]. """
+    pad = 'SAME' if pad else 'VALID'
+    return tf.nn.avg_pool(input, [1,size,size,1], [1,size,size,1], pad, name=name)  
 
-  def _max_pool(self, input, name):
-    # print(input.name + ": " + str(input.shape))
-    return tf.nn.max_pool(input, [1,2,2,1], [1,2,2,1], 'VALID', name=name)
+  def max_pool(self, input, name, size=2, pad=False):
+    """ Helper to create an max pool layer for the network [self] with input
+    of [input] and title [name]. """
+    pad = 'SAME' if pad else 'VALID'
+    return tf.nn.max_pool(input, [1,size,size,1], [1,size,size,1], pad, name=name)
 
-  def _conv_node(self, input, size, filters, name):
+  def conv_node(self, input, size, filters, name, stride=1, pad=False):
+    """ Helper to create an convolution layer for the network [self] with input
+    of [input] and title [name]. The convolution has a kernel of [size] x [size]
+    and the [filter] filters with [stride] stride (default 1). [pad] denotes 
+    whether the output should be the same size as the input ('SAME') or not 
+    ('VALID'), which is the default. 
+    Requires:
+    - [input]: input tensor
+    - [size]: side-length of the square convolution (size x size)
+    - [filters]: int of the #filters
+    - [name]: title of the tensor. Important for TensorBoard, and the scope. 
+    - [stride]: the number of units the convolution travels horizontally and 
+      vertically with each convolution. 
+    - [pad]: whether to pad or not. If true, the output tensor is the same size
+      as [input], else... its just not. 
+    Returns a convolution node with the properties specified above. """
     with tf.variable_scope(name) as scope:
-      # print(input.name + ": " + str(input.shape))
+      pad = 'SAME' if pad else 'VALID'
       in_dim = input.shape[3]
       kernel = self._variable_with_weight_decay('weights', shape=[size, size, in_dim, filters])
-      # print in_dim
-      conv = tf.nn.conv2d(input, kernel, [1,1,1,1], padding='VALID')
+      conv = tf.nn.conv2d(input, kernel, [1,stride,stride,1], padding=pad)
       biases = self._variable_on_cpu('biases', [filters], tf.constant_initializer(0.0))
       pre_activation = tf.nn.bias_add(conv, biases)
       conv_1 = tf.nn.relu(pre_activation, name=scope.name)
       _activation_summary(conv_1)
       return conv_1
 
-  def _reshape_node(self, input, length, name):
+  def reshape_node(self, input, length, name):
+    """ Helper to create a reshape layer for the network with input [input], 
+    that reshapes the node to have length of [length] and has title [name]. 
+    Requires: 
+    - [length]: should probably be input.get_shape().as_list()[0]"""
     with tf.variable_scope(name) as scope:
-      # print(input.name + ": " + str(input.shape))
-      # Convert to a 2D array (layers of lists) so we can perform a single matr*
-      self.reshape = tf.reshape(input, [length, -1])
+      return tf.reshape(input, [length, -1])
+  
+  def local_layer(self, input, length, name):
+    with tf.variable_scope(name) as scope:
       dim = self.reshape.get_shape()[1].value
-      # print(dim)
+      weights = self._variable_with_weight_decay('weights', shape=[dim, 100], 
+                stddev=0.04, wd=0.004)
+      biases = self._variable_on_cpu('biases', [100], tf.constant_initializer(0.1))
+      fc_1 = tf.nn.relu(tf.matmul(self.reshape, weights) + biases, name=scope.name)
+      _activation_summary(fc_1)
+      return fc_1
   
-  def _local_layer(self, input, length, name):
-    with tf.variable_scope(name) as scope:
-      # print(input.name + ": " + str(input.shape))
-      dim = input.get_shape()[1].value
-      weights = self._variable_with_weight_decay('weights', shape=[dim, length], 
-                stddev=0.04)
-      biases = self._variable_on_cpu('biases', [length], tf.constant_initializer(0.1))
-      local = tf.nn.relu(tf.matmul(input, weights) + biases, name=scope.name)
-      _activation_summary(local)
-      return local
-  
-  def _output_layer(self, input, name):
+  def output_layer(self, input, name):
     with tf.variable_scope('output') as scope:
       dim = input.get_shape()[1].value
       num_classes = len(list(self.mapping.keys()))+1
@@ -369,8 +363,6 @@ class VGG:
     """
     # Calculate the average cross entropy loss across the batch.
     labels = tf.cast(labels, tf.int64)
-    print ("--labels: ")
-    print (labels)
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=labels, logits=logits, name='cross_entropy_per_example')
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
@@ -380,17 +372,6 @@ class VGG:
     # decay terms (L2 loss).
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
     
-    # labels = tf.cast(labels, tf.int64)
-    # cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
-    #   labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
-    # cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
-    # # print "cross_entropy_mean"
-    # # print cross_entropy_mean
-    # tf.add_to_collection('losses', cross_entropy_mean)
-
-    # # total loss = cross_entropy plus all weight decay terms. 
-    # return tf.add_n(tf.get_collection('losses'), name='total_loss')
-
   def train(self, total_loss, global_step):
     """ Trains the model. 
     Creates an optimizer and applies to all trainable variables. Adds moving avg
@@ -419,13 +400,10 @@ class VGG:
     # Compute gradients
     with tf.control_dependencies([loss_avgs_op]):
       opt = tf.train.GradientDescentOptimizer(lr)
-      # print opt
       grads = opt.compute_gradients(total_loss)
-      # print grads
 
     # Apply gradients
     apply_grad_op = opt.apply_gradients(grads, global_step=global_step)
-    # print apply_grad_op 
 
     # Add histograms (optional)
     for var in tf.trainable_variables():
@@ -441,5 +419,3 @@ class VGG:
       variable_avgs_op = variable_avgs.apply(tf.trainable_variables())
 
     return variable_avgs_op
-
-    # return average variable operation 

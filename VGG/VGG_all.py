@@ -11,9 +11,9 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('train_dir', 'checkpoints/',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('log_frequency', 1,
+tf.app.flags.DEFINE_integer('log_frequency', 5,
                             """How often to log results to the console.""")
-tf.app.flags.DEFINE_integer('max_steps', 10,
+tf.app.flags.DEFINE_integer('max_steps', 30,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
@@ -33,6 +33,16 @@ tf.app.flags.DEFINE_boolean('run_once', True,
                          """Whether to run eval only once.""")  
 
 def train(vgg=None):
+  """ Trains the network. 
+
+  Prepares the network [vgg] or if [vgg] is None, builds a vgg and loads it
+  with its training data. Calculates its loss with default values and calls the
+  train function on it in a MonitoredTrainingSession, making checkpoints in
+  [FLAGS.train_dir], and logging every [FLAGS.log_frequency] steps until 
+  [FLAGS.max_steps] steps elapse. 
+  Requires: 
+  - [vgg]: has a ['train'] dataset in its datadict. 
+  """
   with tf.Graph().as_default():
     global_step = tf.train.get_or_create_global_step()
 
@@ -46,16 +56,6 @@ def train(vgg=None):
     loss = vgg.loss(logits, labels)
 
     train_op = vgg.train(loss, global_step)
-
-    # print ("---data: ")
-    # print (data)
-    # print ("---logits: ")
-    # print (logits)
-    # print ("---loss: ")
-    # print (loss)
-
-    # print ("---train_op: ")
-    # print(train_op)
 
     class _LoggerHook(tf.train.SessionRunHook):
       """Logs loss and runtime."""
@@ -82,11 +82,6 @@ def train(vgg=None):
                         'sec/batch)')
           print (format_str % (datetime.now(), self._step, loss_value,
                                examples_per_sec, sec_per_batch))
-
-    # print (logits)
-    # print("train section. ")
-    # print loss
-    # print tf.train.SessionRunArgs(loss)
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
         hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
@@ -100,10 +95,17 @@ def train(vgg=None):
     #   sess.run(train_op)
 
 def eval_step(saver, summary_writer, top_k_op, summary_op):
-  """ Runs eval once
+  """ Evaluates the vgg once. 
+
+  Evaluates the calculated labels to their true labels and calculates the 
+  predictive precision of the model. Saves the results and prints the precision.
+  Uses the checkpoint found in [FLAGS.checkpoint_dir]
 
   Requires:
-  - ckpt_dir: directory to store the checkpoints
+  - [saver]: A saver
+  - [summary_writer]: A summary writer to log the eval data. 
+  - [top_k_op]: predictions
+  - [summary_op]: The summary operator corresponding to the summary_writer
   """
   with tf.Session() as sess:
     ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
@@ -154,7 +156,15 @@ def eval_step(saver, summary_writer, top_k_op, summary_op):
     coord.join(threads, stop_grace_period_secs=10)
 
 def evaluate(vgg=None):
-  """Eval CIFAR-10 for a number of steps."""
+  """Eval CIFAR-10 for a number of steps.
+  
+  Similar to train(), evaluate() builds the [vgg], and if None builds its own.
+  Gathers data from 'test' dataset of the vgg's datadict and builds a graph and
+  calculates predictions from the trained set. Runs eval_step() on the model 
+  until manual interruption. 
+  Requires: 
+  - [vgg]: contains a ['test'] dataset  
+  """
   with tf.Graph().as_default() as g:
     # Get images and labels for CIFAR-10.
     # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
@@ -166,13 +176,6 @@ def evaluate(vgg=None):
     # Build a Graph that computes the logits predictions from the
     # inference model.
     logits = vgg.build(data)
-
-    # print "data: "
-    # print data.shape
-    # print "logits: "
-    # print logits.shape
-    # print "labels: "
-    # print labels.shape
 
     # Calculate predictions.
     top_k_op = tf.nn.in_top_k(logits, labels, 1)
@@ -198,12 +201,14 @@ def main(argv=None):
   print " Initializing the Network... "
   vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_merged.npz")
   vgg.split({'train':6, 'test':4})
-  print vgg.datadict['train'].keys()
-  print vgg.datadict['test'].keys()
+
+  print " Training... "
   if tf.gfile.Exists(FLAGS.train_dir):
     tf.gfile.DeleteRecursively(FLAGS.train_dir)
   tf.gfile.MakeDirs(FLAGS.train_dir)
   train(vgg)
+
+  print " Eval..."
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
