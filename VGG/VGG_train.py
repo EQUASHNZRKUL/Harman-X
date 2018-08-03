@@ -27,15 +27,15 @@ def train():
     logits = vgg.build(data)
     loss = vgg.loss(logits, labels)
 
-    print "---data: "
-    print data
-    print "---logits: "
-    print logits
-    print "---loss: "
-    print loss
+    print ("---data: ")
+    print (data)
+    print ("---logits: ")
+    print (logits)
+    print ("---loss: ")
+    print (loss)
 
     train_op = vgg.train(loss, global_step)
-    print "---train_op: "
+    print ("---train_op: ")
     print(train_op)
 
     class _LoggerHook(tf.train.SessionRunHook):
@@ -75,16 +75,18 @@ def train():
     print("train section. ")
     # print loss
     # print tf.train.SessionRunArgs(loss)
-    with tf.train.MonitoredTrainingSession(
-        checkpoint_dir=FLAGS.train_dir,
-        hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
-                tf.train.NanTensorHook(loss),
-                _LoggerHook()],
-        config=tf.ConfigProto(
-            log_device_placement=FLAGS.log_device_placement)) as mon_sess:
-      while not mon_sess.should_stop():
-        print "didn't stop mon_sess"
-        mon_sess.run(train_op)
+    # with tf.train.MonitoredTrainingSession(
+    #     checkpoint_dir=FLAGS.train_dir,
+    #     hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
+    #             tf.train.NanTensorHook(loss),
+    #             _LoggerHook()],
+    #     config=tf.ConfigProto(
+    #         log_device_placement=FLAGS.log_device_placement)) as mon_sess:
+    #   while not mon_sess.should_stop():
+    #     print ("didn't stop mon_sess")
+    #     mon_sess.run(train_op)
+    with tf.Session() as sess:
+      sess.run(train_op)
 
 def main(argv=None):
   if tf.gfile.Exists(FLAGS.train_dir):

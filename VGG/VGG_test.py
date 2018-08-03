@@ -21,7 +21,7 @@ def train():
 
     vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
     # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
-    vgg.split({'train':1, 'test':19})
+    vgg.split({'train':1, 'test':29})
     data, labels = vgg.dic_to_inputs(vgg.datadict['train'])
 
     logits = vgg.build(data)
