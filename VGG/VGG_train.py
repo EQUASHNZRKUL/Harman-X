@@ -19,9 +19,9 @@ def train():
   with tf.Graph().as_default():
     global_step = tf.train.get_or_create_global_step()
 
-    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
-    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
-    vgg.split({'train':1, 'test':19})
+    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
+    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+    # vgg.split({'train':1, 'test':19})
     data, labels = vgg.dic_to_inputs(vgg.datadict['train'])
 
     logits = vgg.build(data)
@@ -75,18 +75,18 @@ def train():
     print("train section. ")
     # print loss
     # print tf.train.SessionRunArgs(loss)
-    # with tf.train.MonitoredTrainingSession(
-    #     checkpoint_dir=FLAGS.train_dir,
-    #     hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
-    #             tf.train.NanTensorHook(loss),
-    #             _LoggerHook()],
-    #     config=tf.ConfigProto(
-    #         log_device_placement=FLAGS.log_device_placement)) as mon_sess:
-    #   while not mon_sess.should_stop():
-    #     print ("didn't stop mon_sess")
-    #     mon_sess.run(train_op)
-    with tf.Session() as sess:
-      sess.run(train_op)
+    with tf.train.MonitoredTrainingSession(
+        checkpoint_dir=FLAGS.train_dir,
+        hooks=[tf.train.StopAtStepHook(last_step=FLAGS.max_steps),
+                tf.train.NanTensorHook(loss),
+                _LoggerHook()],
+        config=tf.ConfigProto(
+            log_device_placement=FLAGS.log_device_placement)) as mon_sess:
+      while not mon_sess.should_stop():
+        print ("didn't stop mon_sess")
+        mon_sess.run(train_op)
+    # with tf.Session() as sess:
+    #   sess.run(train_op)
 
 def main(argv=None):
   if tf.gfile.Exists(FLAGS.train_dir):

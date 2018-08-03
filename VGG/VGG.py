@@ -3,6 +3,8 @@ import math
 import tensorflow as tf 
 import tensorflow.nn
 import os
+import re
+import sys
 
 from random import seed, choice, shuffle
 
@@ -13,6 +15,7 @@ LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
 INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
 NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = 900
 NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = 600
+TOWER_NAME = 'tower'
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -99,7 +102,7 @@ class VGG:
       name = _get_filename(dir)
       datadict = np.load(dir)
       self.size = _dict_length(datadict)
-      i = 0
+      i = -1
 
       # need to translate keys into ints and store a mapping
       # this is necessary now because they will be randomized later
@@ -112,6 +115,8 @@ class VGG:
           name_dict[i] = v
           self.datadict[name] = name_dict
         i += 1
+    print "mapping: "
+    print (self.mapping)
   
   # -=- GETTERS & SETTERS -=-
 
@@ -228,24 +233,31 @@ class VGG:
     - [logits]: A 1D tensor of [batch_size]
     """
     # Layer 1:
-    self.conv3_1 = self._conv_node(input, 3, 64, "conv3_1")
+    self.conv3_1 = self._conv_node(input, 3, 4, "conv3_1")
     self.mpool_1 = self._max_pool(self.conv3_1, "mpool_1")
 
     # Layer 2:
-    self.conv3_2 = self._conv_node(self.mpool_1, 3, 512, "conv3_2")
-    self.conv3_3 = self._conv_node(self.conv3_2, 3, 4096, "conv3_3")
+    self.conv3_2 = self._conv_node(self.mpool_1, 3, 16, "conv3_2")
+    self.conv3_3 = self._conv_node(self.conv3_2, 3, 32, "conv3_3")
     self.mpool_2 = self._max_pool(self.conv3_3, "mpool_2")
+    print ("------=======------")
+    print (self.mpool_2.shape)
 
     # Reshape Layer:
-    length = self.mpool_2.get_shape().as_list()[0]
-    self.resize = self._reshape_node(self.mpool_2, length, "resize")
+    with tf.variable_scope('fc_1') as scope:
+      # self.resize = self._reshape_node(self.mpool_2, length, "resize")
+      self.reshape = tf.reshape(self.mpool_2, [input.get_shape().as_list()[0], -1])
+      dim = self.reshape.get_shape()[1].value
+      weights = self._variable_with_weight_decay('weights', shape=[dim, 100], 
+                stddev=0.04, wd=0.004)
+      biases = self._variable_on_cpu('biases', [100], tf.constant_initializer(0.1))
+      self.fc_1 = tf.nn.relu(tf.matmul(self.reshape, weights) + biases, name=scope.name)
+      _activation_summary(self.fc_1)
 
     # FC Layers:
-    self.fc_1 = self._local_layer(self.reshape, 4096, "fc_1")
-    self.fc_2 = self._local_layer(self.fc_1, 4096, "fc_2")
-    self.fc_3 = self._local_layer(self.fc_2, 1000, "fc_3")
+    # self.fc_1 = self._local_layer(self.reshape, 100, "fc_1")
 
-    self.output = self._output_layer(self.fc_3, name="output")
+    self.output = self._output_layer(self.fc_1, name="softmax_linear")
 
     return self.output
 
@@ -264,7 +276,7 @@ class VGG:
       var = tf.get_variable(name, shape, initializer=initializer, dtype=dtype)
     return var
 
-  def _variable_with_weight_decay(self, name, shape, stddev=5e-2):
+  def _variable_with_weight_decay(self, name, shape, stddev=5e-2, wd=None):
     """Helper to create an initialized Variable with weight decay.
     Note that the Variable is initialized with a truncated normal distribution.
     A weight decay is added only if one is specified.
@@ -282,6 +294,9 @@ class VGG:
         name,
         shape,
         tf.truncated_normal_initializer(stddev=stddev, dtype=dtype))
+    if wd is not None:
+      weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
+      tf.add_to_collection('losses', weight_decay)
     return var
 
   # BUILD: LAYER PRODUCERS
@@ -302,6 +317,7 @@ class VGG:
       biases = self._variable_on_cpu('biases', [filters], tf.constant_initializer(0.0))
       pre_activation = tf.nn.bias_add(conv, biases)
       conv_1 = tf.nn.relu(pre_activation, name=scope.name)
+      _activation_summary(conv_1)
       return conv_1
 
   def _reshape_node(self, input, length, name):
@@ -320,6 +336,7 @@ class VGG:
                 stddev=0.04)
       biases = self._variable_on_cpu('biases', [length], tf.constant_initializer(0.1))
       local = tf.nn.relu(tf.matmul(input, weights) + biases, name=scope.name)
+      _activation_summary(local)
       return local
   
   def _output_layer(self, input, name):
@@ -331,6 +348,7 @@ class VGG:
       biases = self._variable_on_cpu('biases', [num_classes], 
                 tf.constant_initializer(0.0))
       softmax_linear = tf.add(tf.matmul(input, weights), biases, name=name)
+      _activation_summary(softmax_linear)
       return softmax_linear
 
   def loss(self, logits, labels):
@@ -341,7 +359,6 @@ class VGG:
     labels = tf.cast(labels, tf.int64)
     print ("--labels: ")
     print (labels)
-
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=labels, logits=logits, name='cross_entropy_per_example')
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
@@ -350,6 +367,7 @@ class VGG:
     # The total loss is defined as the cross entropy loss plus all of the weight
     # decay terms (L2 loss).
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
+    
     # labels = tf.cast(labels, tf.int64)
     # cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
     #   labels = labels, logits = logits, name = 'cross_entropy_per_datapoint')
