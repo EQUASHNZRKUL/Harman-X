@@ -158,7 +158,7 @@ class VGG:
   #   for elt in v:
   #     self.datadict[key] = val.append(elt)
 
-  def split(self, biasdict):
+  def split(self, biasdict, eq_len=False):
     """ [split] splits up self.datadict into separate dictionaries weighted
       according to [biasdict].
     Requires:
@@ -167,6 +167,7 @@ class VGG:
     - [biasdict]: keys are the titles of the categories (must contain 'train')
       & values are weights of the categories. e.g. {train:1, test:9} would mean
       1/10 prob each datapoint is categorized as 'train', and 9/10 for 'test'.
+    - [eq_len]: specifies if its okay if the lengths of the dicts aren't equal.
     """
     # Unrolls the biasedlist & wipes the biasdict
     seed(1)
@@ -184,8 +185,12 @@ class VGG:
           biasdict[classification][cmd] = np.append(biasdict[classification][cmd], [mfcc], axis=0)
         except KeyError:
           biasdict[classification][cmd] = np.array([mfcc])
-
-    self.datadict = biasdict
+    
+    eq_len_bool = False
+    length = len(biasdict[biasedlist[0]])
+    for _, v in biasdict:
+      eq_len_bool or (len(v) == length)
+      self.datadict = biasdict
 
   def dic_to_inputs(self, dic):
     """ Translates the dataset [dic] from the .npz file into a tf.Tensor
