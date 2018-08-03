@@ -12,7 +12,7 @@ tf.app.flags.DEFINE_integer('log_frequency', 10,
                             """How often to log results to the console.""")
 tf.app.flags.DEFINE_integer('max_steps', 100,
                             """Number of batches to run.""")
-tf.app.flags.DEFINE_boolean('log_device_placement', False,
+tf.app.flags.DEFINE_boolean('log_device_placement', True,
                             """Whether to log device placement.""")
 
 def train():
@@ -21,7 +21,7 @@ def train():
 
     vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
     # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
-    # vgg.split({'train':1, 'test':19})
+    # vgg.split({'train':1, 'test':4})
     data, labels = vgg.dic_to_inputs(vgg.datadict['train'])
 
     logits = vgg.build(data)
@@ -83,7 +83,6 @@ def train():
         config=tf.ConfigProto(
             log_device_placement=FLAGS.log_device_placement)) as mon_sess:
       while not mon_sess.should_stop():
-        print ("didn't stop mon_sess")
         mon_sess.run(train_op)
     # with tf.Session() as sess:
     #   sess.run(train_op)

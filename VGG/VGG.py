@@ -186,11 +186,14 @@ class VGG:
         except KeyError:
           biasdict[classification][cmd] = np.array([mfcc])
     
-    eq_len_bool = False
+    eq_len_bool = True
     length = len(biasdict[biasedlist[0]])
-    for _, v in biasdict:
-      eq_len_bool or (len(v) == length)
+    for _, v in biasdict.items():
+      eq_len_bool and (len(v) == length)
+    if eq_len_bool or eq_len:
       self.datadict = biasdict
+    else:
+      self.split(biasdict, eq_len)
 
   def dic_to_inputs(self, dic):
     """ Translates the dataset [dic] from the .npz file into a tf.Tensor

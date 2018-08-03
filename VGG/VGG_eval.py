@@ -1,17 +1,19 @@
 import VGG
 import tensorflow as tf
 import numpy as np 
+import math
 from time import sleep
+from datetime import datetime
 
 # ../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('eval_dir', 'eval_logs/',
+tf.app.flags.DEFINE_string('eval_dir', './eval_logs',
                            """Directory where to write event logs.""")
 tf.app.flags.DEFINE_string('eval_data', '../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz',
                            """Either 'test' or 'train_eval'.""")
-tf.app.flags.DEFINE_string('checkpoint_dir', 'checkpoints/',
+tf.app.flags.DEFINE_string('checkpoint_dir', './checkpoints',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60,
                             """How often to run the eval.""")
@@ -20,7 +22,7 @@ tf.app.flags.DEFINE_integer('num_examples', 100,
 tf.app.flags.DEFINE_boolean('run_once', False,
                          """Whether to run eval only once.""")                
                     
-def eval_step(saver, top_k_op):
+def eval_step(saver, summary_writer, top_k_op, summary_op):
   """ Runs eval once
 
   Requires:
@@ -40,7 +42,7 @@ def eval_step(saver, top_k_op):
       return
 
     # Start Queue Runners
-    coord = tf.train.Coordinators()
+    coord = tf.train.Coordinator()
     try:
       threads = []
       for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS): # worried about QR
@@ -61,7 +63,12 @@ def eval_step(saver, top_k_op):
       
       # Post-processing: Compute precision @ 1
       precision = true_count / total_sample_count
-      print(("precision @ 1: %3f" % precision))
+      print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
+
+      summary = tf.Summary()
+      summary.ParseFromString(sess.run(summary_op))
+      summary.value.add(tag='Precision @ 1', simple_value=precision)
+      summary_writer.add_summary(summary, global_step)
 
     except Exception as e: #pylint: disable=broad-except
       coord.request_stop(e)
@@ -73,12 +80,21 @@ def evaluate():
   """Eval CIFAR-10 for a number of steps."""
   with tf.Graph().as_default() as g:
     # Get images and labels for CIFAR-10.
-    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+    vgg.split({'train':1, 'test':1})
     data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
     logits = vgg.build(data)
+
+    print "data: "
+    print data.shape
+    print "logits: "
+    print logits.shape
+    print "labels: "
+    print labels.shape
 
     # Calculate predictions.
     top_k_op = tf.nn.in_top_k(logits, labels, 1)
@@ -95,7 +111,7 @@ def evaluate():
     summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
 
     while True:
-      eval_step(saver, top_k_op)
+      eval_step(saver, summary_writer, top_k_op, summary_op)
       if FLAGS.run_once:
         break
       sleep(FLAGS.eval_interval_secs)
