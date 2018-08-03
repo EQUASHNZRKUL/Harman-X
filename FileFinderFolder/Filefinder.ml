@@ -94,7 +94,7 @@ module Dami = MakeTreeDictionary (StringD) (Sami)
     * from the data folder to the text transcript file [textdir] such that they 
     * fulfill foldername/[datdir]/data/[textdir]. The resulting function returns
     * the text location for a given [folder] and [data].*)
-    let accesstext_maker datadir textdir = fun folder data -> 
+  let accesstext_maker datadir textdir = fun folder data -> 
     let dest = String.concat "/" [folder; datadir; data; textdir] in
     read_file dest
 

@@ -5,6 +5,7 @@ import tensorflow.nn
 import os
 import re
 import sys
+import copy
 
 from random import seed, choice, shuffle
 
@@ -109,14 +110,14 @@ class VGG:
       for k, v in datadict.items():
         try:
           self.datadict[name][i] = v
-          self.mapping[k] = i 
+          self.mapping[i] = k
         except KeyError:
           name_dict = {}
           name_dict[i] = v
           self.datadict[name] = name_dict
+          self.mapping[i] = k
+        # print self.datadict[name].keys()
         i += 1
-    print "mapping: "
-    print (self.mapping)
   
   # -=- GETTERS & SETTERS -=-
 
@@ -158,9 +159,11 @@ class VGG:
   #   for elt in v:
   #     self.datadict[key] = val.append(elt)
 
-  def split(self, biasdict, eq_len=False):
+  def split(self, biasdict, eq_len=False, i=7):
     """ [split] splits up self.datadict into separate dictionaries weighted
       according to [biasdict].
+    This code is pretty gross since I had to make some last minute changes to 
+    make sure the eval and train both had all the keys. 
     Requires:
     - [self]: split() has not been called on this object yet. 
     - [self.datadict]: Has only one key. 
@@ -170,7 +173,8 @@ class VGG:
     - [eq_len]: specifies if its okay if the lengths of the dicts aren't equal.
     """
     # Unrolls the biasedlist & wipes the biasdict
-    seed(1)
+    seed(i)
+    backupdict = copy.deepcopy(biasdict)
     biasedlist = []
     for k, v in biasdict.items():
       biasedlist = biasedlist + [k] * v
@@ -189,11 +193,11 @@ class VGG:
     eq_len_bool = True
     length = len(biasdict[biasedlist[0]])
     for _, v in biasdict.items():
-      eq_len_bool and (len(v) == length)
+      eq_len_bool = eq_len_bool and (len(v) == length)
     if eq_len_bool or eq_len:
       self.datadict = biasdict
     else:
-      self.split(biasdict, eq_len)
+      self.split(backupdict, eq_len, i)
 
   def dic_to_inputs(self, dic):
     """ Translates the dataset [dic] from the .npz file into a tf.Tensor

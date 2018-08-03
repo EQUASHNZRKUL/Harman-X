@@ -1,19 +1,24 @@
 import VGG
 import tensorflow as tf
 import time
+import math
 from datetime import datetime
 
 # Basic model parameters
 FLAGS = tf.app.flags.FLAGS
+
+# Training Flags
 tf.app.flags.DEFINE_string('train_dir', 'checkpoints/',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('log_frequency', 50,
+tf.app.flags.DEFINE_integer('log_frequency', 1,
                             """How often to log results to the console.""")
-tf.app.flags.DEFINE_integer('max_steps', 5000,
+tf.app.flags.DEFINE_integer('max_steps', 10,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
+
+# Eval Flags
 tf.app.flags.DEFINE_string('eval_dir', './eval_logs',
                            """Directory where to write event logs.""")
 tf.app.flags.DEFINE_string('eval_data', '../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz',
@@ -22,18 +27,19 @@ tf.app.flags.DEFINE_string('checkpoint_dir', './checkpoints',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 300,
                             """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 5000,
+tf.app.flags.DEFINE_integer('num_examples', 10,
                             """Number of examples to run.""")
-tf.app.flags.DEFINE_boolean('run_once', False,
+tf.app.flags.DEFINE_boolean('run_once', True,
                          """Whether to run eval only once.""")  
 
-def train():
+def train(vgg=None):
   with tf.Graph().as_default():
     global_step = tf.train.get_or_create_global_step()
 
-    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
-    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
-    # vgg.split({'train':1, 'test':4})
+    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/train.npz")
+    if vgg is None:
+      vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+      vgg.split({'train':1, 'test':1})
     data, labels = vgg.dic_to_inputs(vgg.datadict['train'])
 
     logits = vgg.build(data)
@@ -147,13 +153,14 @@ def eval_step(saver, summary_writer, top_k_op, summary_op):
     coord.request_stop()
     coord.join(threads, stop_grace_period_secs=10)
 
-def evaluate():
+def evaluate(vgg=None):
   """Eval CIFAR-10 for a number of steps."""
   with tf.Graph().as_default() as g:
     # Get images and labels for CIFAR-10.
-    vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
-    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
-    # vgg.split({'train':1, 'test':1})
+    # vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz")
+    if vgg is None:
+      vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData.npz")
+      vgg.split({'train':1, 'test':1})
     data, labels = vgg.dic_to_inputs(vgg.datadict['test'])
 
     # Build a Graph that computes the logits predictions from the
@@ -185,17 +192,22 @@ def evaluate():
       eval_step(saver, summary_writer, top_k_op, summary_op)
       if FLAGS.run_once:
         break
-      sleep(FLAGS.eval_interval_secs)
+      time.sleep(FLAGS.eval_interval_secs)
 
 def main(argv=None):
+  print " Initializing the Network... "
+  vgg = VGG.VGG("../FileFinderFolder/PSF/MFCCData_folder/MFCCData_merged.npz")
+  vgg.split({'train':6, 'test':4})
+  print vgg.datadict['train'].keys()
+  print vgg.datadict['test'].keys()
   if tf.gfile.Exists(FLAGS.train_dir):
     tf.gfile.DeleteRecursively(FLAGS.train_dir)
   tf.gfile.MakeDirs(FLAGS.train_dir)
-  train()
+  train(vgg)
   if tf.gfile.Exists(FLAGS.eval_dir):
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
-  evaluate()
+  evaluate(vgg)
 
 if __name__ == '__main__':
   tf.app.run()

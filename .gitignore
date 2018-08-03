@@ -17,4 +17,5 @@ VGG/checkpoints/
 VGG/eval_logs
 VGG/training_results
 FileFinderData/
+FileFinderFolder/results.xlsx
 *.pyc
