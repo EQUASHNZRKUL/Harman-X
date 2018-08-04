@@ -15,6 +15,8 @@ shouldn't have pushed this off so much.
 FileFinderFolder:
 =================
 
+Call **make all** in order to extract command files and store the MFCCData into FileFinderFolder/PSF/MFCC_Data_folder. This directory can be changed in [dir_to_data.py]. 
+
 The top-level stuff in this folder is the engine of the code. FileFinder.ml and
 Makefile are the files that will need to be edited if more data is added. 
 FileFinderData holds all the datasets used for training. Filefinder.ml parses 
@@ -56,3 +58,20 @@ This is the full command:
 
 Any dataset that cannot refer to its sound files with "datasetfolder/[datapointdir]/data/[wavdir]/wav.wav" where foldername, data, wav are specific properties of a given datapoint, and [datapointdir] and [wavdir] are constant throughout a dataset, needs a hard-coded accesswav function. Refer to [accesswav_vox] and [accesswav_ami]. It is a simple function that simply takes a datasetfolder, datapoint, and wavname and returns the directory. 
 
+VGG
+===
+
+VGG.py contains the guts of the Neural Network. VGG_all.py is used to train and evaluate. It takes a large number of arguments. 
+
+| Flag | Default Value | Description |
+| --- | --- | --- |
+| train_dir | checkpoints/ | Directory where to write graph and checkpoint files |
+| log_frequency | 50 | How often to log results to console|
+| max_steps | 1000 | Number of batches to run |
+| log_device_placement | False | Whether to log device placement |
+| eval_dir | ./eval_logs | Directory where to write event logs |
+| eval_data | ../FileFinderFolder/PSF/MFCCData_folder/MFCCData_split/test.npz | Testing data |
+| checkpoint_dir | ./checkpoints | Directory where to read model checkpoints |
+| eval_interval_secs | 300 | How often to run the eval |
+| num_examples | 1000 | Number of examples to run |
+| run_once | False | Whether to run only once |

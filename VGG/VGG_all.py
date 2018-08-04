@@ -27,9 +27,9 @@ tf.app.flags.DEFINE_string('checkpoint_dir', './checkpoints',
                            """Directory where to read model checkpoints.""")
 tf.app.flags.DEFINE_integer('eval_interval_secs', 300,
                             """How often to run the eval.""")
-tf.app.flags.DEFINE_integer('num_examples', 10,
+tf.app.flags.DEFINE_integer('num_examples', 1000,
                             """Number of examples to run.""")
-tf.app.flags.DEFINE_boolean('run_once', True,
+tf.app.flags.DEFINE_boolean('run_once', False,
                          """Whether to run eval only once.""")  
 
 def train(vgg=None):
