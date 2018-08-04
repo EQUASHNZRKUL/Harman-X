@@ -22,8 +22,8 @@ def get_info(infostr):
 
 def cut_ami(filename):
   resfile = open(filename, 'r')
-  os.system("rm ../results/cut_ami_results.txt")
-  f = open("../results/cut_ami_results.txt", "a")
+  os.system("rm ./results/cut_ami_results.txt")
+  f = open("./results/cut_ami_results.txt", "a")
   key = None
   for line in resfile:
     if "[" in line : 
@@ -174,10 +174,10 @@ def main():
   pad_dict(dic, m)
   dlen(dic)
   print dic.keys()
-  write_dict(dic, "./MFCCData")
+  write_dict(dic, "./PSF/MFCCData_folder/MFCCData")
   # cut_ami("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/results/metadata.ami_results.txt")
   merged_dic = merge_dic(dic, ["follow", "small", "medium", "large", "stop", "party"])
-  write_dict(merged_dic, "./MFCCData_merged")
+  write_dict(merged_dic, "./PSF/MFCCData_folder/MFCCData_merged")
   # print_shapes("/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/PSF/MFCCData/smaller.npz")
 
 if __name__ == "__main__":

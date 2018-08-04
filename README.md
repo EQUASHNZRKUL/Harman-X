@@ -34,7 +34,7 @@ looks into.
 | ami | processes the AMI Corpus |
 | wsj | processes the WSJ0 dataset |
 | all | processes all the datasets above |
-| export | copies all the results into a specified folder |
+| export | copies all the results into a specified folder & runs MFCC processing on them |
 | exec | executes make all and make export as a single command |
 | clean | removes all .o and other compile file garbage |
 
@@ -47,11 +47,12 @@ This is the full command:
 
 | Index | Argument | Explanation |
 | --- | --- | --- |
-| 0 | ./main | Self-explanatory |
+| 0 | ./main | Executable |
 | 1 | command list | list of commands you're looking for in FileFinderData (separated by ;)
 | 2 | datasetfolder | directory of dataset | 
 | 3 | datapointdir | directory of a datapoint from dataset directory (only needed for non-defaults |
 | 4 | textdir | directory of a textfile from a datapointdir |
 | 5 | wavdir | directory of a wavfile from a datapointdir |
 
-Any dataset that can refer to its sound files with "datasetfolder/[datapointdir]/data/[wavdir]/wav.wav" where foldername, data, wav are specific properties of a given datapoint, and [datapointdir] and [wavdir] are constant throughout a dataset. 
+Any dataset that cannot refer to its sound files with "datasetfolder/[datapointdir]/data/[wavdir]/wav.wav" where foldername, data, wav are specific properties of a given datapoint, and [datapointdir] and [wavdir] are constant throughout a dataset, needs a hard-coded accesswav function. Refer to [accesswav_vox] and [accesswav_ami]. It is a simple function that simply takes a datasetfolder, datapoint, and wavname and returns the directory. 
+

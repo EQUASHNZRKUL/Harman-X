@@ -68,8 +68,10 @@ all:
 	./main "ami" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/AMI/ami_manual_1.6.1/words" "" "" "" 
 	./main "wsj" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/WSJ0" "" "" "" 
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
+	python PSF/dir_to_data.py
 
 export: 
 	ocamlopt -o main data.mli data.ml str.cmxa Filefinder.ml main.ml
 	./main "export" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam"
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
+	python PSF/dir_to_data.py
