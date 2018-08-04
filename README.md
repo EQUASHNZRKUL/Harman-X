@@ -1,9 +1,5 @@
-# JustinFolder
+# Keyword Detection
 TensorFlow files & Data collection/processing code written during internship at Harman X
-
-=================
-Keyword Detection
-=================
 
 Overview:
 =========
@@ -28,18 +24,19 @@ The Makefile is run as follows:
 
 make can be called with a keyword following it that affects which datasets it 
 looks into. 
-===========      ===========
-Parameter         Description
-===========      ===========
-libri               processes the libri dataset
-vox                 processes the voxforge dataset
-surf                processes the surf dataset
-vy                  processes the vystidial dataset
-ami                 processes the AMI Corpus
-wsj                 processes the WSJ0 dataset
-all                 processes all the datasets above
-export              copies all the results into a specified folder
-exec                executes make all and make export as a single command
-clean               removes all .o and other compile file garbage
+
+| Parameter | Description |
+| --- | --- |
+| libri | processes the libri dataset |
+| vox | processes the voxforge dataset |
+| surf | processes the surf dataset |
+| vy | processes the vystidial dataset |
+| ami | processes the AMI Corpus |
+| wsj | processes the WSJ0 dataset |
+| all | processes all the datasets above |
+| export | copies all the results into a specified folder |
+| exec | executes make all and make export as a single command |
+| clean | removes all .o and other compile file garbage |
+
 
 # ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
