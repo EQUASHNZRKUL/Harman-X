@@ -52,7 +52,7 @@ def train(vgg=None):
       vgg.split({'train':1, 'test':1})
     data, labels = vgg.dic_to_inputs(vgg.datadict['train'])
 
-    logits = vgg.build(data)
+    logits = vgg.build(data) # change this line to make your own CNN
     loss = vgg.loss(logits, labels)
 
     train_op = vgg.train(loss, global_step)
@@ -175,7 +175,7 @@ def evaluate(vgg=None):
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
-    logits = vgg.build(data)
+    logits = vgg.build(data) #Change this line to make your own CNN
 
     # Calculate predictions.
     top_k_op = tf.nn.in_top_k(logits, labels, 1)

@@ -61,6 +61,8 @@ Any dataset that cannot refer to its sound files with "datasetfolder/[datapointd
 VGG
 ===
 
+Call **python VGG_all.py** to build, train, and evaluate the neural network. You can make your own CNN by adjusting lines 55 & 176 in VGG_all.py and making your own build function. Make sure they call the same build function though; you must eval and train on the same graph. 
+
 VGG.py contains the guts of the Neural Network. VGG_all.py is used to train and evaluate. It takes a large number of arguments. 
 
 | Flag | Default Value | Description |
@@ -75,3 +77,5 @@ VGG.py contains the guts of the Neural Network. VGG_all.py is used to train and 
 | eval_interval_secs | 300 | How often to run the eval |
 | num_examples | 1000 | Number of examples to run |
 | run_once | False | Whether to run only once |
+
+I will be updating this README later. You can find it on the github page. 
