@@ -24,7 +24,7 @@ let main () =
     let res, txtout = (surf_dict dirpath cmdlist, "surf_results.txt") in
     let oc = open_out ("results/" ^ txtout) in
     ignore (print_result oc res)
-  | "vox" | "libri" | "vy" | "wsj" -> 
+  | _ -> 
     let res, txtout = (match argv.(1) with
     | "vox" -> (find_words cmdlist accesstext_vox accesswav_vox dirpath true, 
         "vox_results.txt")
@@ -33,11 +33,11 @@ let main () =
     | "vy" -> (find_words cmdlist accesstext_vy accesswav_vy dirpath false, 
       "vy_results.txt")
     | "wsj" -> print_endline "wsj"; (wsj0_dict dirpath cmdlist, "wsj_results.txt")
-    | _ -> (D.empty,"")) in
+    | x -> (find_words cmdlist (accesstext_maker args.(3) args.(4)) 
+      (accesswav_maker args.(3) args.(5)) dirpath true, x ^ ".txt")) in
     let cmd_dict = make_cmd_dict res D.empty in
     let oc = open_out ("results/" ^ txtout) in
     ignore (print_result oc cmd_dict)
-  | _ -> failwith "argv 1 is invalid"
   ;;
 
 main ()

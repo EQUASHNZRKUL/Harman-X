@@ -22,10 +22,10 @@ all the data in the folder and extracts instances of spoken commands.
 
 The Makefile is run as follows: 
 
-make can be called with a keyword following it that affects which datasets it 
+**make** can be called with a command following it that affects which datasets it 
 looks into. 
 
-| Parameter | Description |
+| Command | Description |
 | --- | --- |
 | libri | processes the libri dataset |
 | vox | processes the voxforge dataset |
@@ -38,5 +38,20 @@ looks into.
 | exec | executes make all and make export as a single command |
 | clean | removes all .o and other compile file garbage |
 
+The Data parsing commands must be followed by the following arguments to work. 
+If a new dataset format is introduced, it must be implemented in here as well in
+[exec] and [all] at the very least. 
 
-# ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
+This is the full command: 
+./main cmdList(separated by ';') datasetdir datapointdir textdir wavdir
+
+| Index | Argument | Explanation |
+| --- | --- | --- |
+| 0 | ./main | Self-explanatory |
+| 1 | command list | list of commands you're looking for in FileFinderData (separated by ;)
+| 2 | datasetfolder | directory of dataset | 
+| 3 | datapointdir | directory of a datapoint from dataset directory (only needed for non-defaults |
+| 4 | textdir | directory of a textfile from a datapointdir |
+| 5 | wavdir | directory of a wavfile from a datapointdir |
+
+Any dataset that can refer to its sound files with "datasetfolder/[datapointdir]/data/[wavdir]/wav.wav" where foldername, data, wav are specific properties of a given datapoint, and [datapointdir] and [wavdir] are constant throughout a dataset. 

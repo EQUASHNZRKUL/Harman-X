@@ -29,12 +29,6 @@ exec:
 	./main "export" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam"
 	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
 
-eval:
-# ./Filefinder cmdList(separated by ';') datasetdir datapointdir textdir wavdir
-	ocamlopt -o main data.mli data.ml str.cmxa Filefinder.ml main.ml
-	./main "vox" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/VoxForge" "" "etc/PROMPTS" "wav"
-	rm data.cmi data.o data.cmx Filefinder.cmx Filefinder.o Filefinder.cmi main main.cmi main.cmx main.o
-
 libri:
 	ocamlopt -o main data.mli data.ml str.cmxa Filefinder.ml main.ml
 	./main "libri" "follow; follow me; stop; party; party mode; small; medium; large; small beam; medium beam; large beam" "/Users/justinkae/Documents/TensorFlowPractice/FileFinderFolder/FileFinderData/LibriSpeechFlat" "" "" ""
